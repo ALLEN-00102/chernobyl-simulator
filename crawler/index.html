@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SUPER CRAWLER X · 超级爬虫</title>
+<style>
+:root{
+  --bg:#070b10;--panel:#0e1520;--panel2:#131c2a;--line:#1d2a3c;--line2:#2b3e58;
+  --txt:#cfe0ee;--dim:#5f7590;--acc:#00e676;--acc2:#39c5ff;--warn:#ffb74d;--err:#ff5c6c;--mag:#e05cff;
+  --mono:'Cascadia Code','Consolas','Courier New',monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--bg);color:var(--txt);font-family:var(--mono);font-size:14px}
+a{color:var(--acc2);text-decoration:none;word-break:break-all}
+a:hover{text-decoration:underline}
+button{font-family:var(--mono);cursor:pointer}
+::selection{background:var(--acc);color:#000}
+.wrap{max-width:1280px;margin:0 auto;padding:0 16px 60px}
+header{border-bottom:1px solid var(--line);background:repeating-linear-gradient(0deg,transparent 0 3px,rgba(0,230,118,.012) 3px 4px)}
+.hd{max-width:1280px;margin:0 auto;padding:16px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.logo{font-size:22px;letter-spacing:2px;color:var(--acc);text-shadow:0 0 14px rgba(0,230,118,.5)}
+.logo b{color:var(--txt)}
+.sub{color:var(--dim);font-size:12px}
+.pill{margin-left:auto;font-size:12px;color:var(--dim);border:1px solid var(--line2);padding:4px 10px;border-radius:4px;background:var(--panel)}
+.pill i{color:var(--acc);font-style:normal}
+.searchbar{display:flex;gap:8px;margin:18px 0 10px;flex-wrap:wrap}
+.searchbar input{flex:1;min-width:300px;background:var(--panel);border:1px solid var(--line2);color:var(--txt);
+  font-family:var(--mono);font-size:14px;padding:12px 14px;border-radius:6px;outline:none}
+.searchbar input:focus{border-color:var(--acc);box-shadow:0 0 0 1px rgba(0,230,118,.25)}
+.btn{background:var(--panel2);border:1px solid var(--line2);color:var(--txt);padding:11px 16px;border-radius:6px;font-size:13px;transition:.15s}
+.btn:hover{border-color:var(--acc);color:var(--acc)}
+.btn.primary{background:var(--acc);color:#001a0c;border-color:var(--acc);font-weight:bold}
+.btn.primary:hover{filter:brightness(1.15)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.quick{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;font-size:12px}
+.chip{border:1px solid var(--line2);background:var(--panel);color:var(--dim);padding:5px 10px;border-radius:20px;cursor:pointer}
+.chip:hover{color:var(--acc2);border-color:var(--acc2)}
+.stats{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0 12px}
+.stat{border:1px solid var(--line);background:var(--panel);padding:8px 14px;border-radius:6px;font-size:12px;color:var(--dim);cursor:pointer}
+.stat b{color:var(--txt);font-size:15px;margin-right:6px}
+.stat.on{border-color:var(--acc);color:var(--acc)}
+.stat.on b{color:var(--acc)}
+.list{display:flex;flex-direction:column;gap:8px;margin-top:8px}
+.item{display:flex;align-items:center;gap:10px;background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:10px 12px;flex-wrap:wrap}
+.item:hover{border-color:var(--line2)}
+.badge{font-size:11px;padding:3px 8px;border-radius:4px;font-weight:bold;letter-spacing:1px;flex-shrink:0}
+.b-video{background:rgba(224,92,255,.15);color:var(--mag);border:1px solid rgba(224,92,255,.4)}
+.b-audio{background:rgba(57,197,255,.12);color:var(--acc2);border:1px solid rgba(57,197,255,.4)}
+.b-image{background:rgba(0,230,118,.12);color:var(--acc);border:1px solid rgba(0,230,118,.4)}
+.b-doc{background:rgba(255,183,77,.12);color:var(--warn);border:1px solid rgba(255,183,77,.4)}
+.b-page{background:rgba(160,160,160,.12);color:#aaa;border:1px solid #444}
+.b-script{background:rgba(255,92,108,.12);color:var(--err);border:1px solid rgba(255,92,108,.4)}
+.iurl{flex:1;min-width:260px;font-size:12px;color:var(--txt);word-break:break-all}
+.isize{font-size:11px;color:var(--dim);flex-shrink:0}
+.ibtns{display:flex;gap:6px;flex-shrink:0}
+.btn.sm{padding:6px 12px;font-size:12px;border-radius:4px}
+.btn.dl{background:rgba(0,230,118,.12);border-color:rgba(0,230,118,.4);color:var(--acc)}
+.btn.dl:hover{background:rgba(0,230,118,.25)}
+#log{margin-top:18px;background:#05080c;border:1px solid var(--line);border-radius:6px;padding:12px;height:220px;overflow-y:auto;font-size:12px;line-height:1.7}
+#log div{white-space:pre-wrap;word-break:break-all}
+.l-ok{color:var(--acc)}.l-err{color:var(--err)}.l-warn{color:var(--warn)}.l-dim{color:var(--dim)}.l-info{color:var(--acc2)}
+.empty{padding:40px;text-align:center;color:var(--dim);font-size:13px;border:1px dashed var(--line2);border-radius:6px}
+.prog{position:fixed;bottom:0;left:0;right:0;background:var(--panel);border-top:1px solid var(--line2);padding:10px 16px;display:none;z-index:99}
+.prog.show{display:block}
+.prog .bar{height:6px;background:var(--line);border-radius:3px;overflow:hidden;margin-top:8px}
+.prog .fill{height:100%;background:var(--acc);width:0%;transition:width .2s}
+.prog .txt{font-size:12px;color:var(--dim)}
+footer{margin-top:26px;color:var(--dim);font-size:11px;text-align:center;line-height:1.8}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.75);display:none;align-items:center;justify-content:center;z-index:100}
+.modal.show{display:flex}
+.mbox{background:var(--panel);border:1px solid var(--line2);border-radius:8px;padding:18px;width:min(860px,94vw);max-height:88vh;overflow:auto}
+.mbox h3{font-size:14px;margin-bottom:10px;color:var(--acc)}
+.mbox pre{font-size:11px;white-space:pre-wrap;word-break:break-all;color:var(--txt);background:#05080c;padding:12px;border-radius:6px;max-height:60vh;overflow:auto}
+.mrow{display:flex;gap:8px;justify-content:flex-end;margin-top:12px}
+</style>
+</head>
+<body>
+<header><div class="hd">
+  <div class="logo">SUPER CRAWLER <b>X</b></div>
+  <div class="sub">全要素采集 · 视频/音频/图片/文档/链接 · 自动挖直链 · 免找原链</div>
+  <div class="pill">引擎<i>●</i> multi-channel</div>
+</div></header>
+
+<div class="wrap">
+  <div class="searchbar">
+    <input id="url" placeholder="输入任意网页地址（视频页/文章页/下载页均可）回车开始抓取" spellcheck="false">
+    <button class="btn primary" id="go" onclick="crawl()">⚡ 开始抓取</button>
+    <button class="btn" onclick="extractDoc()">📄 正文/文档模式</button>
+    <button class="btn" onclick="clearAll()">清空</button>
+  </div>
+  <div class="quick">
+    <span class="chip" onclick="quick('https://www.bilibili.com')">示例: B站主站</span>
+    <span class="chip" style="color:var(--warn);border-color:var(--warn)" onclick="biliHelper()">📌 B站视频专用通道（风控绕行）</span>
+    <span class="chip" onclick="document.getElementById('url').focus()">提示: 粘贴 直链##ref=来源页 可直接下载</span>
+  </div>
+
+  <div class="stats" id="stats"></div>
+  <div class="list" id="list"><div class="empty">等待任务 — 输入网址回车，自动抓取并挖出页面内全部媒体直链（视频/音频/图片/文档），点下载直接保存，无需手动找链接</div></div>
+
+  <div id="log"></div>
+
+  <footer>
+    抓取通道：CloudBase 云函数(raw) → Cloudflare Worker(自建) → 直连 → 公共代理（自动降级）<br>
+    视频支持 mp4/webm/flv 直链与 m3u8(HLS) 自动合并（含AES-128解密）· 大文件 Range 分块 · 防盗链 Referer 伪装<br>
+    仅限抓取你有权访问的内容 · 强DRM站点(Netflix等)不支持
+  </footer>
+</div>
+
+<div class="prog" id="prog"><div class="txt" id="progTxt"></div><div class="bar"><div class="fill" id="progFill"></div></div></div>
+<div class="modal" id="modal"><div class="mbox"><h3 id="mTitle"></h3><pre id="mBody"></pre><div class="mrow"><button class="btn" onclick="closeModal()">关闭</button><button class="btn dl" id="mSave" onclick="saveModal()">💾 保存为文件</button></div></div></div>
+
+<script>
+/* ============ 配置 ============ */
+const TCB = 'https://chernobyl-sim-d3gaxavw3e2df91ea-1492568300.ap-shanghai.app.tcloudbase.com/fetchpage';
+const CF_W = 'https://scx-proxy.allen00102.workers.dev';
+const PROXIES = [
+  u => TCB + '?url=' + encodeURIComponent(u) + '&raw=1',
+  u => CF_W + '/?url=' + encodeURIComponent(u),
+  u => 'https://api.allorigins.win/raw?url=' + encodeURIComponent(u),
+  u => 'https://api.codetabs.com/v1/proxy/?quest=' + encodeURIComponent(u)
+];
+const CHUNK = 5*1024*1024;
+
+/* ============ 日志 ============ */
+const logBox = document.getElementById('log');
+function log(msg, cls){ const d=document.createElement('div'); d.className='l-'+(cls||'dim'); d.textContent='['+new Date().toLocaleTimeString()+'] '+msg; logBox.appendChild(d); logBox.scrollTop=logBox.scrollHeight; }
+
+/* ============ 多通道抓取 ============ */
+async function pfetch(url, opt={}){
+  const tries=[];
+  const mk=(label,build)=>async u=>{
+    const h={};
+    if(opt.range) h['Range']=opt.range;
+    if(opt.referer) h['x-referer']=opt.referer;
+    const r=await fetch(build(u),{headers:h});
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    return r;
+  };
+  // 通道1: 云函数(raw=1 原始内容) 通道2: 自建CF Worker 通道3+: 公共代理兜底
+  tries.push(mk('TCB', u=>TCB+'?url='+encodeURIComponent(u)+'&raw=1'+(opt.referer?'&referer='+encodeURIComponent(opt.referer):'')));
+  tries.push(mk('CFW', u=>CF_W+'/?url='+encodeURIComponent(u)));
+  for(const p of PROXIES.slice(2)) tries.push(mk('PUB', p));
+  if(!opt.forceProxy) tries.unshift(u=>fetch(u,opt.fetchInit||{}));
+  let lastErr;
+  for(let i=0;i<tries.length;i++){
+    try{ const r=await tries[i](url); log('通道['+(i===0&&!opt.forceProxy?'直连':i)+'] 命中','ok'); return r; }
+    catch(e){ lastErr=e; }
+  }
+  throw lastErr||new Error('全部通道失败');
+}
+async function probeSize(url){
+  try{
+    const r=await fetch(TCB+'?url='+encodeURIComponent(url)+'&head=1&raw=1');
+    const j=await r.json();
+    if(j.ok) return {size:+j.contentLength||0, ranges:(j.acceptRanges||'').includes('bytes'), type:j.contentType||''};
+  }catch(e){}
+  try{
+    const r=await fetch(CF_W+'/?url='+encodeURIComponent(url),{method:'HEAD'});
+    return {size:+r.headers.get('content-length')||0, ranges:(r.headers.get('accept-ranges')||'').includes('bytes'), type:r.headers.get('content-type')||''};
+  }catch(e){}
+  return {size:0, ranges:false, type:''};
+}
+async function ptext(url,opt){ const r=await pfetch(url,opt); return await r.text(); }
+async function pbytes(url,opt){ const r=await pfetch(url,opt); return new Uint8Array(await r.arrayBuffer()); }
+
+/* ============ 资源模型 ============ */
+let RES=[], curTab='all';
+const EXTMAP={video:['mp4','m3u8','flv','webm','mkv','mov','avi','ts','mpd','m4s'],audio:['mp3','m4a','aac','wav','ogg','flac','opus','wma'],image:['jpg','jpeg','png','gif','webp','bmp','svg','ico','avif'],doc:['pdf','doc','docx','xls','xlsx','ppt','pptx','txt','md','csv','epub','azw3','mobi','json','xml'],archive:['zip','rar','7z','tar','gz'],script:['js','css']};
+function extOf(u){ try{ const p=new URL(u,location.href).pathname; const m=p.match(/\.([a-z0-9]{1,5})$/i); return m?m[1].toLowerCase():''; }catch(e){ return ''; } }
+function typeOf(u){
+  const e=extOf(u); const s=u.toLowerCase();
+  if(/\.m3u8|\.mpd|format=m3u8|type=m3u8/.test(s)) return 'video';
+  for(const [t,arr] of Object.entries(EXTMAP)) if(arr.includes(e)) return t==='archive'?'doc':t;
+  if(/\.(mp4|m3u8|mpd|flv|webm)[?]|video|playurl|playinfo|mediadata|__playinfo__/.test(s)) return 'video';
+  if(/\.(mp3|m4a|aac|wav|ogg|flac)[?]|audio/.test(s)) return 'audio';
+  if(/\.(jpg|jpeg|png|gif|webp)[?]/.test(s)) return 'image';
+  if(/\.(pdf|docx?|xlsx?|pptx?|epub|azw3|mobi)[?]/.test(s)) return 'doc';
+  return 'other';
+}
+function nameOf(u,t){
+  try{ const p=new URL(u,location.href); let n=decodeURIComponent(p.pathname.split('/').pop()||''); if(n&&n.includes('.')) return n.slice(0,60);}catch(e){}
+  return (t||'res')+'_'+Math.abs(hash(u)).toString(36).slice(0,8)+'.'+(guessExt(u,t)||'bin');
+}
+function guessExt(u,t){ const e=extOf(u); if(e) return e; return {video:'mp4',audio:'mp3',image:'jpg',doc:'bin',other:'bin'}[t]||'bin'; }
+function hash(s){ let h=0; for(let i=0;i<s.length;i++){h=((h<<5)-h+s.charCodeAt(i))|0;} return Math.abs(h); }
+
+function addRes(url,type,from,referer){
+  if(!url||url.startsWith('data:')||url.startsWith('blob:')) return;
+  url=url.trim(); if(url.length<8) return;
+  if(!/^https?:\/\//i.test(url)){
+    try{ url=new URL(url, location.href).href; }catch(e){ return; }
+  }
+  if(RES.some(r=>r.url===url)) return;
+  if(!type) type=typeOf(url);
+  RES.push({url,type,from:from||'',size:null,name:nameOf(url,type),referer:referer||''});
+}
+
+/* ============ 渲染 ============ */
+function render(){
+  const list=document.getElementById('list'), stats=document.getElementById('stats');
+  if(!RES.length){ list.innerHTML='<div class="empty">等待任务 — 输入网址回车开始抓取</div>'; stats.innerHTML=''; return; }
+  const counts={}; RES.forEach(r=>counts[r.type]=(counts[r.type]||0)+1);
+  const TABS=[['all','全部'],['video','视频'],['audio','音频'],['image','图片'],['doc','文档'],['other','链接/其他']];
+  stats.innerHTML=TABS.map(([k,n])=>`<div class="stat ${curTab===k?'on':''}" onclick="curTab='${k}';render()"><b>${k==='all'?RES.length:(counts[k]||0)}</b>${n}</div>`).join('');
+  const show=curTab==='all'?RES:RES.filter(r=>r.type===curTab);
+  if(!show.length){ list.innerHTML='<div class="empty">该分类暂无资源</div>'; return; }
+  RES.forEach((r,idx)=>{ if(!r._id) r._id='r'+idx; });
+  const BN={video:'视频',audio:'音频',image:'图片',doc:'文档',other:'链接',script:'脚本'};
+  list.innerHTML=show.map((r,i)=>`
+    <div class="item">
+      <span class="badge b-${r.type}">${BN[r.type]||r.type.toUpperCase()}</span>
+      <span class="iurl"><a href="${esc(r.url)}" target="_blank" rel="noreferrer">${esc(r.url.length>110?r.url.slice(0,110)+'…':r.url)}</a>${r.from?`<br><span style="color:var(--dim);font-size:10px">来源: ${esc(r.from)}</span>`:''}</span>
+      <span class="isize">${r.size?fmtSize(r.size):''}</span>
+      <span class="ibtns">
+        ${['video','audio','image'].includes(r.type)?`<button class="btn sm" onclick="preview('${r._id}')">▶ 预览</button>`:''}
+        ${r.type==='video'&&/\.m3u8/i.test(r.url)?`<button class="btn sm dl" onclick="dlHLS('${r._id}')">⬇ 合并下载</button>`:''}
+        <button class="btn sm dl" onclick="dlOne('${r._id}')">⬇ 下载</button>
+      </span>
+    </div>`).join('');
+}
+function esc(s){ return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function fmtSize(n){ if(n>1e9) return (n/1e9).toFixed(2)+' GB'; if(n>1e6) return (n/1e6).toFixed(1)+' MB'; if(n>1e3) return (n/1e3).toFixed(0)+' KB'; return n+' B'; }
+function byId(id){ return RES.find(r=>r._id===id); }
+function clearAll(){ RES=[]; render(); log('已清空','dim'); }
+function quick(u){ document.getElementById('url').value=u; crawl(); }
+
+/* ============ 抓取主流程 ============ */
+let BUSY=false;
+async function crawl(){
+  const inp=document.getElementById('url'); let target=inp.value.trim();
+  if(!target) return log('请输入网址','warn');
+  if(!/^https?:\/\//i.test(target)) target='https://'+target;
+  inp.value=target;
+  if(BUSY) return log('正在处理上一任务','warn');
+  BUSY=true; document.getElementById('go').disabled=true;
+  try{
+    log('开始抓取: '+target,'info');
+    const html=await ptext(target);
+    log('抓取成功 '+fmtSize(html.length),'ok');
+    parseHTML(html, target);
+    await deepScan(target);
+    render();
+    log('解析完成，共 '+RES.length+' 项资源','ok');
+  }catch(e){ log('抓取失败: '+e.message,'err'); }
+  BUSY=false; document.getElementById('go').disabled=false;
+}
+
+function parseHTML(html, base){
+  const doc=new DOMParser().parseFromString(html,'text/html'); let n=0;
+  doc.querySelectorAll('[src]').forEach(el=>{ addRes(el.getAttribute('src'),null,'标签'+el.tagName.toLowerCase()); n++; });
+  doc.querySelectorAll('[href]').forEach(el=>{ const h=el.getAttribute('href'); if(h&&!h.startsWith('#')&&!h.startsWith('javascript:')){ addRes(h,null,'<a/link>'); n++; } });
+  doc.querySelectorAll('source').forEach(el=>addRes(el.getAttribute('src'),null,'<source>'));
+  doc.querySelectorAll('video,audio').forEach(el=>{
+    (el.getAttribute('src')&&addRes(el.getAttribute('src'),null,'<video/audio>'));
+    const p=el.getAttribute('poster'); if(p) addRes(p,'image','poster');
+  });
+  // data-src 懒加载
+  doc.querySelectorAll('[data-src],[data-original],[data-url]').forEach(el=>{
+    const v=el.getAttribute('data-src')||el.getAttribute('data-original')||el.getAttribute('data-url');
+    if(v) addRes(v,null,'懒加载');
+  });
+  // 内联 script 中的 JSON / 直链深扫
+  doc.querySelectorAll('script').forEach(s=>{
+    const t=s.textContent||''; if(t.length<10) return;
+    scanText(t, 'inline-script');
+  });
+  // 全文正则兜底（HTML 内嵌 JSON 常见于 ssr 页面）
+  scanText(html, 'page-text');
+  log('HTML 解析: 提取 '+n+' 个标签资源','dim');
+}
+
+/* 深扫：找 __playinfo__ / player JSON / 媒体直链 */
+function scanText(text, from){
+  try{
+    // 1) window.__playinfo__ = {...} 等大 JSON
+    const jsonRe=/(?:window\.)?(__playinfo__|__INITIAL_STATE__|__NEXT_DATA__|player_data|__pinia|videoData|playUrl)\s*=\s*(\{[\s\S]{0,200000}?\});/g;
+    let m;
+    while((m=jsonRe.exec(text))!==null){
+      try{
+        const obj=JSON.parse(m[2]);
+        walkJSON(obj, from+':'+m[1]);
+      }catch(e){
+        // JSON 不完整则退回正则扫描该片段
+        scanLinks(m[2], from+':'+m[1]+'(partial)');
+      }
+    }
+    // 2) 全文本直链正则
+    scanLinks(text, from);
+  }catch(e){ log('深扫异常 '+e.message,'warn'); }
+}
+function scanLinks(text, from){
+  const re=/https?:\/\/[^\s"'<>\\]+?\.(m3u8|mpd|mp4|flv|webm|mkv|mov|ts|m4s|mp3|m4a|aac|wav|ogg|flac|pdf|docx?|xlsx?|pptx?|epub|zip|rar|7z)(\?[^\s"'<>\\]*)?/gi;
+  let m, c=0;
+  while((m=re.exec(text))!==null){ addRes(m[0],null,from); c++; }
+  if(c) log('正则命中 '+c+' 条直链 ('+from+')','dim');
+}
+function walkJSON(obj, from, depth){
+  if(depth>12||obj===null) return;
+  if(Array.isArray(obj)){ obj.forEach(v=>walkJSON(v,from,(depth||0)+1)); return; }
+  if(typeof obj==='object'){
+    for(const [k,v] of Object.entries(obj)){
+      if(typeof v==='string'){
+        if(/^https?:\/\//.test(v) && /\.(m3u8|mpd|mp4|flv|webm|mp3|m4a|aac|ts|m4s)/i.test(v)){
+          addRes(v,null,from+'.'+k);
+        }
+      } else walkJSON(v,from+'.'+k,(depth||0)+1);
+    }
+  }
+}
+
+/* ============ 深度模式：正文/文档提取 ============ */
+async function extractDoc(){
+  const inp=document.getElementById('url'); let target=inp.value.trim();
+  if(!target) return log('请输入网址','warn');
+  if(!/^https?:\/\//i.test(target)) target='https://'+target;
+  log('正文提取模式 (r.jina.ai): '+target,'info');
+  try{
+    const r=await fetch('https://r.jina.ai/'+target);
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    const txt=await r.text();
+    openModal('📄 正文提取 · '+target, txt, nameOf(target,'doc').replace(/\.\w+$/,'')+'_正文.txt');
+    log('正文提取成功 '+fmtSize(txt.length),'ok');
+  }catch(e){ log('正文提取失败: '+e.message,'err'); }
+}
+
+/* ============ 下载引擎 ============ */
+function saveBlob(blob, filename){
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob); a.download=filename;
+  document.body.appendChild(a); a.click();
+  setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},4000);
+  log('已保存: '+filename+' ('+fmtSize(blob.size)+')','ok');
+}
+function progShow(txt){ const p=document.getElementById('prog'); p.classList.add('show'); document.getElementById('progTxt').textContent=txt; }
+function progSet(p,txt){ document.getElementById('progFill').style.width=Math.min(100,p*100)+'%'; if(txt)document.getElementById('progTxt').textContent=txt; }
+function progHide(){ document.getElementById('prog').classList.remove('show'); }
+
+async function dlOne(id){
+  const r=byId(id); if(!r) return;
+  const url=r.url;
+  try{
+    if(/\.m3u8/i.test(url)) return dlHLS(id);
+    log('下载: '+url,'info');
+    progShow('探测文件信息…');
+    // 探测文件信息（云函数 head 模式 / Worker HEAD）
+    const info=await probeSize(url);
+    const size=info.size, acceptsRange=info.ranges;
+    r.size=size; render();
+    if(size && size<=CHUNK || !acceptsRange){
+      progSet(0.05,'单次下载 '+fmtSize(size||0));
+      const rr=await pfetch(url,{});
+      const blob=await rr.blob();
+      progSet(1,'完成');
+      saveBlob(blob, r.name);
+    } else {
+      await chunkedDL(url, r);
+    }
+  }catch(e){ log('下载失败: '+e.message,'err'); }
+  progHide();
+}
+
+async function chunkedDL(url, res, prefix){
+  const parts=[];
+  progSet(0,'分块下载 0/'+Math.ceil((res.size||0)/CHUNK));
+  for(let off=0; off<res.size; off+=CHUNK){
+    const end=Math.min(off+CHUNK, res.size)-1;
+    const rr=await pfetch(url,{forceProxy:true, range:'bytes='+off+'-'+end, referer:res.referer||''});
+    parts.push(await rr.arrayBuffer());
+    progSet((off+CHUNK)/res.size,'分块下载 '+Math.round((off+CHUNK)/CHUNK)+'/'+Math.ceil(res.size/CHUNK)+' · '+fmtSize(Math.min(off+CHUNK,res.size))+'/'+fmtSize(res.size));
+  }
+  saveBlob(new Blob(parts,{type:'application/octet-stream'}), (prefix||'')+res.name);
+}
+
+/* ============ HLS m3u8 合并下载 ============ */
+async function dlHLS(id){
+  const r=byId(id); if(!r) return;
+  try{
+    log('HLS 解析: '+r.url,'info');
+    progShow('解析 m3u8…');
+    let text=await ptext(r.url);
+    // 多级索引：找最高码率子 playlist
+    let lvl=0;
+    while(/#EXT-X-STREAM-INF/i.test(text) && lvl<3){
+      const lines=text.split(/\r?\n/);
+      let best=null,bestBw=0;
+      for(let i=0;i<lines.length;i++){
+        if(lines[i].startsWith('#EXT-X-STREAM-INF')){
+          const bw=+((lines[i].match(/BANDWIDTH=(\d+)/)||[])[1]||0);
+          const uri=lines[i+1]; if(uri&&!uri.startsWith('#')&&bw>=bestBw){bestBw=bw;best=uri.trim();}
+        }
+      }
+      if(!best) break;
+      const sub=new URL(best, r.url).href;
+      log('多级索引 → '+sub,'dim');
+      text=await ptext(sub); lvl++;
+    }
+    // 解析 key + segments
+    let encKey=null, ivHex=null, seq=0;
+    const segs=[];
+    for(const line of text.split(/\r?\n/)){
+      if(line.startsWith('#EXT-X-MEDIA-SEQUENCE')) seq=+line.split(':')[1]||0;
+      if(line.startsWith('#EXT-X-KEY')){
+        const method=(line.match(/METHOD=([^,]+)/)||[])[1];
+        if(method&&method!=='NONE'){
+          const ku=(line.match(/URI="([^"]+)"/)||[])[1];
+          ivHex=(line.match(/IV=0[xX]([0-9a-fA-F]+)/)||[])[1];
+          if(ku){ const kurl=new URL(ku, r.url).href; encKey=await pbytes(kurl); log('AES-128 密钥已获取','ok'); }
+        }
+      }
+      if(line&&!line.startsWith('#')) segs.push(new URL(line, r.url).href);
+    }
+    if(!segs.length) throw new Error('未找到媒体分段');
+    log('共 '+segs.length+' 段'+(encKey?' (AES-128 加密)':''),'dim');
+    progSet(0,'下载分段 0/'+segs.length);
+    const key=encKey?await crypto.subtle.importKey('raw',encKey,'AES-CBC',false,['decrypt']):null;
+    const chunks=[]; let done=0; const total=segs.length;
+    const CONC=4; let idx=0;
+    async function worker(){
+      while(idx<total){
+        const my=idx++;
+        let data=await pbytes(segs[my]);
+        if(key){
+          let iv;
+          if(ivHex){ iv=new Uint8Array(ivHex.match(/.{2}/g).map(h=>parseInt(h,16))); }
+          else{ iv=new Uint8Array(16); const dv=new DataView(iv.buffer); dv.setUint32(8, seq+my); }
+          data=new Uint8Array(await crypto.subtle.decrypt({name:'AES-CBC',iv}, key, data));
+        }
+        chunks[my]=data; done++;
+        if(done%5===0||done===total) progSet(done/total,'下载分段 '+done+'/'+total+' · '+fmtSize(chunks.reduce((s,c)=>s+(c?c.length:0),0)));
+      }
+    }
+    await Promise.all(Array.from({length:CONC},worker));
+    const blob=new Blob(chunks,{type:'video/mp2t'});
+    saveBlob(blob, r.name.replace(/\.\w+$/,'')+'.ts');
+  }catch(e){ log('HLS 失败: '+e.message,'err'); }
+  progHide();
+}
+
+/* ============ 预览 ============ */
+async function preview(id){
+  const r=byId(id); if(!r) return;
+  openModal((r.type==='video'?'▶ 视频预览 · ':'🎵 音频预览 · ')+r.name,
+    '<video controls autoplay style="width:100%;max-height:60vh" src="'+esc(r.url)+'"></video>', null);
+  document.getElementById('mSave').style.display='none';
+}
+function openModal(title, body, saveName){
+  document.getElementById('mTitle').textContent=title;
+  document.getElementById('mBody').innerHTML=body;
+  const sb=document.getElementById('mSave');
+  if(saveName){ sb.style.display=''; sb.dataset.name=saveName; sb.dataset.body=body; }
+  else sb.style.display='none';
+  document.getElementById('modal').classList.add('show');
+}
+function saveModal(){ const sb=document.getElementById('mSave'); saveBlob(new Blob([sb.dataset.body],{type:'text/plain'}), sb.dataset.name); }
+function closeModal(){ document.getElementById('modal').classList.remove('show'); }
+
+/* ============ B站专用：书签提取 + 直链下载 ============ */
+const BILI_BOOKMARKLET = "javascript:(function(){var pi=window.__playinfo__;if(!pi||!pi.data||!pi.data.dash){alert('未找到播放数据，请先播放视频再点');return;}var d=pi.data.dash;var v=(d.video||[]).slice().sort(function(a,b){return(b.bandwidth||0)-(a.bandwidth||0)})[0];var a=(d.audio||[]).slice().sort(function(a,b){return(b.bandwidth||0)-(a.bandwidth||0)})[0];var out=v.baseUrl+(a?'##ref='+encodeURIComponent(location.href)+'##audio='+encodeURIComponent(a.baseUrl):'##ref='+encodeURIComponent(location.href));var w=window.open('https://allen-00102.github.io/chernobyl-simulator/?direct='+encodeURIComponent(out),'_blank');if(!w){prompt('弹窗被拦截，请手动复制：',out);}})()";
+function biliHelper(){
+  openModal('📌 B站视频下载 · 三步搞定（绕过风控）',
+    '<div style="font-size:13px;line-height:2">'+
+    '<b style="color:var(--warn)">第一步</b>：复制下面整段代码 → 浏览器书签栏右键 →「添加网页/新书签」→ 名称随意（如「B站提取」），网址栏粘贴这段代码<br>'+
+    '<b style="color:var(--warn)">第二步</b>：打开任意 B站视频播放页（等视频开始播放）→ 点书签栏里的「B站提取」<br>'+
+    '<b style="color:var(--warn)">第三步</b>：会自动跳回本页并列出视频/音频直链 → 分别点 ⬇ 下载<br>'+
+    '<span style="color:var(--dim)">合并：下载的 video.m4s + audio.m4s 可用 ffmpeg 合并：<br>ffmpeg -i video.m4s -i audio.m4s -c copy output.mp4</span>'+
+    '</div><textarea id="bkCode" style="width:100%;height:90px;margin-top:10px;background:#05080c;color:var(--acc);border:1px solid var(--line2);border-radius:4px;padding:8px;font-family:var(--mono);font-size:11px" readonly>'+esc(BILI_BOOKMARKLET)+'</textarea>', null);
+  document.getElementById('mSave').style.display='none';
+}
+function dlDirect(rawStr){
+  rawStr=rawStr.trim();
+  let ref='';
+  const m=rawStr.match(/^(.+?)##ref=([^#]+)(?:##audio=(.+))?$/);
+  if(m){ rawStr=m[1]; ref=decodeURIComponent(m[2]);
+    if(m[3]) addRes(decodeURIComponent(m[3]),'audio','B站书签',ref);
+  }
+  addRes(rawStr,'video','B站书签',ref);
+  render();
+  const vr=RES[RES.length-1];
+  log('识别为直链，开始下载（Referer: '+(ref||'无')+'）','info');
+  dlOne(vr._id);
+}
+/* URL 参数自动处理：?direct=<enc直链[##ref=...]> */
+(function(){
+  const q=new URLSearchParams(location.search);
+  const d=q.get('direct');
+  if(d){
+    history.replaceState(null,'',location.pathname);
+    setTimeout(()=>{ dlDirect(d); },600);
+  }
+})();
+
+/* ============ 事件 ============ */
+document.getElementById('url').addEventListener('keydown',e=>{ if(e.key==='Enter'){
+  const v=document.getElementById('url').value.trim();
+  if(/##ref=/.test(v)) return dlDirect(v);
+  crawl();
+}});
+log('SUPER CRAWLER X 就绪 · 云函数通道: '+ (TCB.includes('tcloudbase')?'已配置':'未配置') ,'ok');
+</script>
+</body>
+</html>
