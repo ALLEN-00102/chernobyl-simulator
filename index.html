@@ -1,114 +1,981 @@
 <!DOCTYPE html>
-<html lang="zh">
+<html lang="zh-CN">
 <head>
-<script>
-/* 使用密码门：密码 ALLEN00102，同一会话内只需输入一次 */
-(function(){
-  try{
-    if(sessionStorage.getItem('vipAuth')==='ok')return;
-    document.documentElement.style.visibility='hidden';
-    var pw=prompt('🔒 请输入使用密码');
-    while(pw!==null&&pw!=='ALLEN00102'){ pw=prompt('❌ 密码错误，请重新输入'); }
-    if(pw===null){ location.href='/'; throw 'redirect'; }
-    sessionStorage.setItem('vipAuth','ok');
-    document.documentElement.style.visibility='';
-  }catch(e){ if(e!=='redirect')document.documentElement.style.visibility=''; }
-})();
-</script>
-  <meta charset="UTF-8">
-  <title>VIP视频解析</title>
-  <style>
-    body { background-color: #505050; font-size: 15px; }
-    .search { margin-top: 50px; text-align: center; }
-    .search input { width: 500px; height: 24px; outline: none; }
-    .search button { vertical-align: center; }
-    iframe { display: block; width: 1000px; height: 500px; margin: 30px auto; background-color: #dddddd; }
-    p { color: #000; text-align: center; }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SUPER CRAWLER · 超级爬虫</title>
+<style>
+:root{
+  --bg:#0a0e14; --panel:#0f1620; --panel2:#141d2b; --line:#1e2a3a; --line2:#28394f;
+  --txt:#c9d6e2; --dim:#6b8098; --acc:#00e676; --acc2:#39c5ff; --warn:#ffb74d; --err:#ff5c6c;
+  --mono:'Cascadia Code','Consolas','Courier New',monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--bg);color:var(--txt);font-family:var(--mono);font-size:14px}
+a{color:var(--acc2);text-decoration:none}
+a:hover{text-decoration:underline}
+button{font-family:var(--mono);cursor:pointer}
+::selection{background:var(--acc);color:#000}
+
+.wrap{max-width:1200px;margin:0 auto;padding:0 16px 40px}
+
+/* header */
+header{border-bottom:1px solid var(--line);background:
+  repeating-linear-gradient(0deg,transparent 0 3px,rgba(0,230,118,.012) 3px 4px),var(--bg)}
+.hd{max-width:1200px;margin:0 auto;padding:18px 16px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.logo{font-size:22px;letter-spacing:2px;color:var(--acc);text-shadow:0 0 12px rgba(0,230,118,.45)}
+.logo b{color:var(--txt)}
+.hd .sub{color:var(--dim);font-size:12px}
+.hd .env{margin-left:auto;font-size:12px;color:var(--dim);border:1px solid var(--line2);
+  padding:4px 10px;border-radius:4px;background:var(--panel)}
+.hd .env i{color:var(--acc);font-style:normal}
+
+/* controls */
+.controls{margin:18px 0 10px;display:flex;gap:8px;flex-wrap:wrap}
+.urlbox{flex:1 1 420px;display:flex}
+.urlbox .scheme{background:var(--panel2);border:1px solid var(--line2);border-right:none;
+  border-radius:6px 0 0 6px;color:var(--dim);display:flex;align-items:center;padding:0 10px;font-size:13px}
+.urlbox input{flex:1;background:var(--panel2);border:1px solid var(--line2);color:var(--txt);
+  padding:11px 12px;font-family:var(--mono);font-size:14px;border-radius:0 6px 6px 0;outline:none;min-width:0}
+.urlbox input:focus{border-color:var(--acc);box-shadow:0 0 0 2px rgba(0,230,118,.15)}
+.btn{background:var(--panel2);border:1px solid var(--line2);color:var(--txt);padding:10px 16px;
+  border-radius:6px;font-size:13px;transition:all .12s;white-space:nowrap}
+.btn:hover{border-color:var(--acc);color:var(--acc);background:#12241c}
+.btn:active{transform:translateY(1px)}
+.btn:focus-visible{outline:2px solid var(--acc2);outline-offset:2px}
+.btn.primary{background:var(--acc);border-color:var(--acc);color:#04140b;font-weight:bold}
+.btn.primary:hover{background:#2cf59a;color:#04140b}
+.btn.primary:disabled{opacity:.45;cursor:not-allowed;transform:none}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn.mini{padding:3px 8px;font-size:12px;border-radius:4px}
+
+.busybar{height:2px;background:var(--line);overflow:hidden;border-radius:2px;margin-bottom:6px}
+.busybar.on::after{content:"";display:block;height:100%;width:40%;background:linear-gradient(90deg,transparent,var(--acc),transparent);
+  animation:slide 1s linear infinite}
+@keyframes slide{from{transform:translateX(-100%)}to{transform:translateX(350%)}}
+.stateline{font-size:12px;color:var(--dim);margin-bottom:14px;min-height:18px}
+.stateline b{color:var(--acc)}
+.stateline .err{color:var(--err)}
+
+/* chips */
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.chip{border:1px solid var(--line2);background:var(--panel);padding:5px 12px;border-radius:20px;font-size:12px;color:var(--dim)}
+.chip i{font-style:normal;color:var(--acc);font-weight:bold;margin-left:4px}
+
+/* tabs */
+.tabs{display:flex;gap:2px;border-bottom:1px solid var(--line);overflow-x:auto;scrollbar-width:thin}
+.tab{background:none;border:none;border-bottom:2px solid transparent;color:var(--dim);
+  padding:10px 16px;font-size:13px;transition:color .12s;white-space:nowrap}
+.tab:hover{color:var(--txt)}
+.tab:focus-visible{outline:2px solid var(--acc2);outline-offset:-2px}
+.tab.on{color:var(--acc);border-bottom-color:var(--acc)}
+.tab .n{font-size:11px;color:var(--dim);margin-left:4px}
+
+/* panels */
+.panel{display:none;padding:14px 0;min-height:220px}
+.panel.on{display:block}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:14px}
+.grid2{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:10px}
+.kv{display:grid;grid-template-columns:110px 1fr;gap:6px 12px;font-size:13px}
+.kv dt{color:var(--dim)}
+.kv dd{word-break:break-all}
+
+.toolbar{display:flex;gap:8px;align-items:center;margin-bottom:10px;flex-wrap:wrap}
+.toolbar input{background:var(--panel2);border:1px solid var(--line2);color:var(--txt);padding:7px 10px;
+  border-radius:5px;font-family:var(--mono);font-size:12px;outline:none;width:200px}
+.toolbar input:focus{border-color:var(--acc)}
+.toolbar .spacer{flex:1}
+
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{color:var(--dim);text-align:left;font-weight:normal;border-bottom:1px solid var(--line);padding:6px 8px;font-size:12px}
+td{border-bottom:1px solid var(--line);padding:6px 8px;vertical-align:middle}
+tr:hover td{background:rgba(0,230,118,.03)}
+td.u{word-break:break-all;max-width:520px}
+td.u span{color:var(--txt)}
+td .host{color:var(--dim);font-size:11px;display:block}
+.tag{display:inline-block;font-size:11px;padding:1px 7px;border-radius:3px;border:1px solid var(--line2);color:var(--dim)}
+.tag.in{color:var(--acc);border-color:rgba(0,230,118,.4)}
+.tag.ex{color:var(--warn);border-color:rgba(255,183,77,.4)}
+.tag.img{color:var(--acc2);border-color:rgba(57,197,255,.4)}
+.ops{white-space:nowrap;text-align:right}
+
+/* images */
+.imgs{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px}
+.icard{background:var(--panel);border:1px solid var(--line);border-radius:8px;overflow:hidden;transition:border-color .12s}
+.icard:hover{border-color:var(--acc)}
+.icard .th{height:120px;background:#060a0f center/contain no-repeat;display:flex;align-items:center;justify-content:center;color:var(--dim);font-size:11px}
+.icard .th img{width:100%;height:100%;object-fit:contain;display:block}
+.icard .meta{padding:8px}
+.icard .meta .nm{font-size:11px;color:var(--txt);word-break:break-all;max-height:28px;overflow:hidden}
+.icard .meta .ops2{display:flex;gap:6px;margin-top:7px}
+
+/* text & source */
+pre.flow{background:#060a0f;border:1px solid var(--line);border-radius:8px;padding:14px;font-size:12px;
+  line-height:1.7;white-space:pre-wrap;word-break:break-word;max-height:480px;overflow:auto;color:#9fb3c8}
+pre.flow::-webkit-scrollbar,.tabs::-webkit-scrollbar,section.log::-webkit-scrollbar{width:8px;height:8px}
+pre.flow::-webkit-scrollbar-thumb,section.log::-webkit-scrollbar-thumb{background:var(--line2);border-radius:4px}
+
+/* log */
+section.log{margin-top:18px;background:#060a0f;border:1px solid var(--line);border-radius:8px;
+  height:170px;overflow-y:auto;padding:10px 12px;font-size:12px;line-height:1.8}
+.logline .t{color:var(--dim)}
+.logline .ok{color:var(--acc)}
+.logline .warn{color:var(--warn)}
+.logline .err{color:var(--err)}
+.logline .info{color:var(--acc2)}
+
+/* empty / error */
+.empty{padding:50px 20px;text-align:center;color:var(--dim)}
+.empty .big{font-size:15px;color:var(--txt);margin-bottom:10px}
+.errcard{border-color:rgba(255,92,108,.5)}
+.errcard h3{color:var(--err);font-size:14px;margin-bottom:8px}
+.errcard li{margin:4px 0 4px 18px;color:var(--dim);font-size:12px}
+
+footer{margin-top:26px;border-top:1px solid var(--line);padding-top:14px;color:var(--dim);font-size:11px;line-height:1.9}
+footer b{color:var(--warn)}
+
+@media (max-width:640px){
+  .hd{padding:14px 12px}.hd .env{margin-left:0}
+  td.u{max-width:180px}
+  .ops .btn.mini{padding:3px 6px}
+  .kv{grid-template-columns:90px 1fr}
+}
+</style>
 </head>
 <body>
+<header>
+  <div class="hd">
+    <div class="logo">SUPER<b>■</b>CRAWLER</div>
+    <div class="sub">超级爬虫 · 输入网址 · 抓取全网资源</div>
+    <div class="env">ENV <i>chernobyl-sim</i> · CloudBase · <a href="/vip.html" style="color:#7ee787;text-decoration:underline" target="_blank">🎬 VIP视频解析</a></div>
+  </div>
+</header>
 
-<!--搜索栏-->
-<div class="search">
-  <input type="text" id="text">
-  <button type="button" onclick="input_parse1()">线路一</button>
-  <button type="button" onclick="input_parse2()">线路二</button>
-  <button type="button" onclick="input_parse3()">线路三</button>
-  <button type="button" onclick="reset()">清空</button>
+<div class="wrap">
+  <div class="controls">
+    <div class="urlbox">
+      <span class="scheme">https://</span>
+      <input id="url" type="text" placeholder="输入要抓取的网址，例如 example.com" spellcheck="false" autocomplete="off">
+    </div>
+    <button class="btn primary" id="go">开始抓取</button>
+    <button class="btn" id="clear">清空结果</button>
+  </div>
+  <div class="busybar" id="busybar"></div>
+  <div class="stateline" id="stateline">就绪 · 等待输入网址。回车或点击“开始抓取”。</div>
+
+  <div class="chips" id="chips">
+    <span class="chip">已爬页面<i id="cPages">0</i></span>
+    <span class="chip">图片<i id="cImg">0</i></span>
+    <span class="chip">链接<i id="cLink">0</i></span>
+    <span class="chip">脚本<i id="cJs">0</i></span>
+    <span class="chip">样式<i id="cCss">0</i></span>
+    <span class="chip">媒体<i id="cMedia">0</i></span>
+  </div>
+
+  <nav class="tabs" id="tabs">
+    <button class="tab on" data-p="info">页面信息</button>
+    <button class="tab" data-p="imgs">图片<span class="n" id="nImg">0</span></button>
+    <button class="tab" data-p="links">链接<span class="n" id="nLink">0</span></button>
+    <button class="tab" data-p="code">脚本/样式<span class="n" id="nCode">0</span></button>
+    <button class="tab" data-p="media">媒体<span class="n" id="nMedia">0</span></button>
+    <button class="tab" data-p="text">正文</button>
+    <button class="tab" data-p="src">源码</button>
+    <button class="tab" data-p="export">导出</button>
+  </nav>
+
+  <section class="panel on" id="p-info">
+    <div class="empty" id="infoEmpty">
+      <div class="big">尚无抓取结果</div>
+      在上方输入任意网址开始抓取。结果将按资源类型分类展示，可复制、打开或下载。
+    </div>
+    <div class="card" id="infoCard" style="display:none">
+      <dl class="kv" id="infoKv"></dl>
+    </div>
+  </section>
+
+  <section class="panel" id="p-imgs">
+    <div class="toolbar">
+      <input type="text" id="fImg" placeholder="筛选图片地址...">
+    </div>
+    <div class="imgs" id="imgsBox"></div>
+  </section>
+
+  <section class="panel" id="p-links">
+    <div class="toolbar">
+      <input type="text" id="fLink" placeholder="筛选链接...">
+      <span class="spacer"></span>
+      <button class="btn" id="btnBatch">批量抓取本页内链</button>
+    </div>
+    <div class="card"><table id="linkTable">
+      <thead><tr><th>类型</th><th>链接</th><th class="ops">操作</th></tr></thead>
+      <tbody></tbody>
+    </table></div>
+  </section>
+
+  <section class="panel" id="p-code">
+    <div class="toolbar"><input type="text" id="fCode" placeholder="筛选脚本/样式..."></div>
+    <div class="card"><table id="codeTable">
+      <thead><tr><th>类型</th><th>地址</th><th class="ops">操作</th></tr></thead>
+      <tbody></tbody>
+    </table></div>
+  </section>
+
+  <section class="panel" id="p-media">
+    <div class="toolbar"><input type="text" id="fMedia" placeholder="筛选媒体..."></div>
+    <div class="card"><table id="mediaTable">
+      <thead><tr><th>类型</th><th>地址</th><th class="ops">操作</th></tr></thead>
+      <tbody></tbody>
+    </table></div>
+  </section>
+
+  <section class="panel" id="p-text">
+    <pre class="flow" id="textBox">（暂无正文。抓取页面后自动提取可见文本。）</pre>
+  </section>
+
+  <section class="panel" id="p-src">
+    <pre class="flow" id="srcBox">（暂无源码。抓取页面后展示原始 HTML，上限 100KB。）</pre>
+  </section>
+
+  <section class="panel" id="p-export">
+    <div class="card">
+      <p style="color:var(--dim);font-size:13px;margin-bottom:12px">
+        导出本次会话抓取到的全部页面与资源清单（去重合并）。</p>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <button class="btn" id="expJson">下载清单 JSON</button>
+        <button class="btn" id="expTxt">下载清单 TXT</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="log" id="log"></section>
+
+  <div style="text-align:center;margin:10px 0 0">
+    <a href="/vip.html" style="color:#7ee787;font-size:14px;text-decoration:none;border:1px solid #2ea043;border-radius:6px;padding:6px 14px;display:inline-block" onmouseover="this.style.background='#123d1f'" onmouseout="this.style.background='none'">🎬 VIP 视频在线解析播放 →</a>
+  </div>
+  <footer>
+    <button class="btn mini" id="bmBtn" style="vertical-align:middle">📺 视频站专用：获取书签提取工具</button>
+    <span style="opacity:.65">B站/抖音等动态加载、反爬拦截的站点用书签提取，回车粘贴即下载</span>
+    <br>合规提示：本工具仅用于<b>个人学习与技术研究</b>。请仅抓取公开可访问的资源，遵守目标网站 robots.txt、服务条款与版权法律；
+    请勿抓取需登录的私有内容、个人隐私数据，勿用于任何商业或违法用途。批量抓取已内置 400ms 礼貌间隔。
+  </footer>
 </div>
 
-<iframe src="" frameborder="0" id="player" scrolling="no" allowfullscreen allowtransparency></iframe>
-<p>在搜索栏输入地址后，按回车键即可解析，按Esc可以清空地址栏</p>
-
 <script>
-    const _0x28d9b8 = _0x2725;
-    function _0x2725(_0x14a593, _0x55d166) {
-        const _0x5edc91 = _0x5edc();
-        return _0x2725 = function(_0x2725b7, _0xf3fcf0) {
-            _0x2725b7 = _0x2725b7 - 0xbb;
-            let _0x52dcae = _0x5edc91[_0x2725b7];
-            return _0x52dcae;
-        },
-        _0x2725(_0x14a593, _0x55d166);
-    } (function(_0x31e00c, _0x5acf25) {
-        const _0x208716 = _0x2725,
-        _0x1b0757 = _0x31e00c();
-        while ( !! []) {
-            try {
-                const _0x429405 = -parseInt(_0x208716(0xbc)) / 0x1 + -parseInt(_0x208716(0xc1)) / 0x2 + -parseInt(_0x208716(0xcb)) / 0x3 * (parseInt(_0x208716(0xbf)) / 0x4) + parseInt(_0x208716(0xbd)) / 0x5 + parseInt(_0x208716(0xc5)) / 0x6 + -parseInt(_0x208716(0xc3)) / 0x7 * (parseInt(_0x208716(0xbe)) / 0x8) + parseInt(_0x208716(0xc4)) / 0x9;
-                if (_0x429405 === _0x5acf25) break;
-                else _0x1b0757['push'](_0x1b0757['shift']());
-            } catch(_0x720fd7) { _0x1b0757['push'](_0x1b0757['shift']()); }
-        }
-    } (_0x5edc, 0x1f7f3));
-    let parse_url = _0x28d9b8(0xcd),
-    parse_url2 = 'aHR0cHM6Ly93d3cucGxheW0zdTguY24vamlleGkucGhwP3VybD0=',
-    parse_url3 = _0x28d9b8(0xc9),
-    input = document[_0x28d9b8(0xcc)](_0x28d9b8(0xcf)),
-    player = document['getElementById']('player');
-    function play(_0x5ae5d3) {
-        const _0x1bb1c9 = _0x28d9b8;
-        player[_0x1bb1c9(0xc2)] = _0x5ae5d3;
-    }
-    function _0x5edc() {
-        const _0x9a8ace = ['aHR0cHM6Ly9zdmlwLmJsamlleC5jYy8/dj0=', 'indexOf', 'text', 'substr', 'keyCode', '176039LCjagB', '291385usxdWD', '1592kcHAar', '3188qDTIaf', 'length', '462336agzEkq', 'src', '1519ziyFVB', '5529447dIQdvF', '329898GFpqxY', 'preventDefault', 'value', 'keyup', 'aHR0cHM6Ly9pbTE5MDcudG9wLz9qeD0=', 'search', '558bjZbnx', 'getElementById'];
-        _0x5edc = function() { return _0x9a8ace; };
-        return _0x5edc();
-    }
-    function input_parse1() {
-        let _0x4d309f = atob(parse_url) + input['value'];
-        play(_0x4d309f);
-    }
-    function input_parse2() {
-        const _0x5649bb = _0x28d9b8;
-        let _0x47040c = atob(parse_url2) + input[_0x5649bb(0xc7)];
-        play(_0x47040c);
-    }
-    function input_parse3() {
-        const _0x4dd4b4 = _0x28d9b8;
-        let _0x19c0b2 = atob(parse_url3) + input[_0x4dd4b4(0xc7)];
-        play(_0x19c0b2);
-    }
-    function reset() { input['value'] = ''; }
-    // 修复原版 bug：回车键调用的 input_parse 未定义，默认走线路一
-    function input_parse() { input_parse1(); }
-    input['addEventListener'](_0x28d9b8(0xc8),
-    function(_0x32b858) {
-        const _0x32cd55 = _0x28d9b8;
-        _0x32b858[_0x32cd55(0xc6)]();
-        if (_0x32b858['keyCode'] === 0xd) input_parse();
-        else _0x32b858[_0x32cd55(0xbb)] === 0x1b && reset();
-    });
-    let tmp = location[_0x28d9b8(0xca)],
-    href = tmp[_0x28d9b8(0xd0)](tmp[_0x28d9b8(0xce)]('?')),
-    reg = 'url=([^&]*)',
-    url = href['match'](reg)[0x0];
-    url !== null && url[_0x28d9b8(0xc0)] > 0x4 && (url = url[_0x28d9b8(0xd0)](url[_0x28d9b8(0xce)]('url=') + 0x4), location_parse(url));
-    function location_parse(_0x1acf24) {
-        let _0x54df90 = parse_url + _0x1acf24;
-        play(_0x54df90), input['value'] = _0x1acf24;
-    }
-</script>
+"use strict";
+/* ================= 配置 ================= */
+// CloudBase 云函数 HTTP 访问地址（部署后回填；为空时自动跳过该通道）
+var TCB_PROXY = "https://chernobyl-sim-d3gaxavw3e2df91ea-1492568300.ap-shanghai.app.tcloudbase.com/fetchpage";
 
+var ENV_ID = "chernobyl-sim-d3gaxavw3e2df91ea";
+var BATCH_LIMIT = 8;
+var BATCH_DELAY = 400;
+
+/* ================= 状态 ================= */
+var store = {
+  pages: [],
+  images: new Map(),
+  links: new Map(),   // key:url val:{url,host,internal,from}
+  scripts: new Map(),
+  styles: new Map(),
+  media: new Map()
+};
+var lastPage = null;      // 最近一次页面信息
+var lastInternal = [];    // 最近一次页面的内链列表
+var busy = false;
+var curTab = "info";
+
+/* ================= 工具 ================= */
+function $(id){ return document.getElementById(id); }
+function esc(s){ return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+function nowT(){ var d=new Date(); return d.toTimeString().slice(0,8); }
+function fileName(u){ try{ var p=new URL(u).pathname; var s=p.split("/").filter(Boolean).pop()||u.host; return decodeURIComponent(s).slice(0,60);}catch(e){ return u.slice(0,50);} }
+function normalize(raw){
+  var u=(raw||"").trim();
+  if(!u) return "";
+  if(!/^https?:\/\//i.test(u)) u="https://"+u;
+  try{ var o=new URL(u); if(!o.hostname.includes(".")) return ""; return o.href; }catch(e){ return ""; }
+}
+
+function log(tag,msg){
+  var box=$("log");
+  var line=document.createElement("div");
+  line.className="logline";
+  var cls = tag==="OK"?"ok":tag==="WARN"?"warn":tag==="ERR"?"err":"info";
+  line.innerHTML='<span class="t">['+nowT()+']</span> <span class="'+cls+'">'+esc(tag)+'</span> '+esc(msg);
+  box.appendChild(line);
+  while(box.children.length>250) box.removeChild(box.firstChild);
+  box.scrollTop=box.scrollHeight;
+}
+
+function setBusy(on){
+  busy=on;
+  $("busybar").classList.toggle("on",on);
+  $("go").disabled=on;
+}
+
+function toast(msg,isErr){
+  var el=$("stateline");
+  el.innerHTML = isErr ? '<span class="err">'+esc(msg)+'</span>' : esc(msg);
+}
+
+/* ================= 抓取引擎 ================= */
+function withTimeout(ms){
+  var c=new AbortController();
+  var t=setTimeout(function(){ c.abort(); },ms);
+  return {signal:c.signal, cancel:function(){ clearTimeout(t); }};
+}
+
+async function tcbFetch(url,binary){
+  if(!TCB_PROXY) return {ok:false,error:"未配置云函数通道"};
+  var to=withTimeout(30000);
+  try{
+    var u=TCB_PROXY+"?url="+encodeURIComponent(url)+(binary?"&binary=1":"");
+    var r=await fetch(u,{signal:to.signal});
+    var j=await r.json();
+    to.cancel();
+    if(!j.ok) return {ok:false,error:j.error||"HTTP "+j.status};
+    return {ok:true, engine:"CloudBase", status:j.status, contentType:j.contentType,
+            size:j.size, text:j.text, base64:j.base64, finalUrl:j.finalUrl||url};
+  }catch(e){ to.cancel(); return {ok:false,error:e.name==="AbortError"?"超时":e.message}; }
+}
+
+async function plainFetch(url){
+  var to=withTimeout(15000);
+  try{
+    var r=await fetch(url,{signal:to.signal,redirect:"follow"});
+    to.cancel();
+    var text=await r.text();
+    return {ok:r.ok&&text.length>0, engine:"直连", status:r.status,
+            contentType:r.headers.get("content-type")||"", size:text.length, text:text, finalUrl:r.url||url,
+            error:r.ok?undefined:"HTTP "+r.status};
+  }catch(e){ to.cancel(); return {ok:false,error:"CORS或网络不可达"}; }
+}
+
+async function proxyGet(url,prefix,engName,post){
+  var to=withTimeout(20000);
+  try{
+    var r=await fetch(prefix+encodeURIComponent(url),{signal:to.signal});
+    to.cancel();
+    var text=await r.text();
+    if(post) return post(r,text,url);
+    return {ok:r.ok&&text.length>0, engine:engName, status:r.status,
+            contentType:r.headers.get("content-type")||"", size:text.length, text:text, finalUrl:url,
+            error:r.ok?undefined:"HTTP "+r.status};
+  }catch(e){ to.cancel(); return {ok:false,error:e.name==="AbortError"?"超时":e.message}; }
+}
+
+var ENGINES=[
+  {name:"CloudBase 云函数", run:function(u){ return tcbFetch(u,false); }},
+  {name:"浏览器直连",       run:function(u){ return plainFetch(u); }},
+  {name:"公共代理A",        run:function(u){ return proxyGet(u,"https://api.allorigins.win/raw?url=","公共代理A"); }},
+  {name:"公共代理B",        run:function(u){ return proxyGet(u,"https://corsproxy.io/?url=","公共代理B"); }},
+  {name:"公共代理C",        run:function(u){ return proxyGet(u,"https://api.codetabs.com/v1/proxy/?quest=","公共代理C"); }}
+];
+
+/* ================= 解析 ================= */
+function resolveUrl(base,rel){
+  try{ if(!rel) return null; return new URL(rel,base).href; }catch(e){ return null; }
+}
+
+function parsePage(html,baseUrl,meta){
+  var doc=new DOMParser().parseFromString(html,"text/html");
+  var out={images:[],links:[],scripts:[],styles:[],media:[]};
+  var seen={img:new Set(),lnk:new Set(),js:new Set(),css:new Set(),md:new Set()};
+
+  function addImg(u){ if(!u||seen.img.has(u))return; seen.img.add(u);
+    out.images.push({url:u,name:fileName(u)}); }
+  doc.querySelectorAll("img").forEach(function(el){
+    addImg(resolveUrl(baseUrl,el.getAttribute("src")));
+    addImg(resolveUrl(baseUrl,el.getAttribute("data-src")));
+  });
+  doc.querySelectorAll("source[srcset]").forEach(function(el){
+    var first=(el.getAttribute("srcset")||"").split(",")[0].trim().split(/\s+/)[0];
+    addImg(resolveUrl(baseUrl,first));
+  });
+  doc.querySelectorAll('link[rel*="icon"]').forEach(function(el){
+    addImg(resolveUrl(baseUrl,el.getAttribute("href")));
+  });
+  doc.querySelectorAll('meta[property="og:image"]').forEach(function(el){
+    addImg(resolveUrl(baseUrl,el.getAttribute("content")));
+  });
+
+  var baseHost=""; try{ baseHost=new URL(baseUrl).host; }catch(e){}
+  doc.querySelectorAll("a[href]").forEach(function(el){
+    var u=resolveUrl(baseUrl,el.getAttribute("href"));
+    if(!u||seen.lnk.has(u))return;
+    if(/^(javascript:|mailto:|tel:|data:)/i.test(u))return;
+    seen.lnk.add(u);
+    var internal=false; try{ internal=new URL(u).host===baseHost; }catch(e){}
+    out.links.push({url:u,host:(function(){try{return new URL(u).host}catch(e){return ""}})(),internal:internal});
+  });
+
+  doc.querySelectorAll("script[src]").forEach(function(el){
+    var u=resolveUrl(baseUrl,el.getAttribute("src"));
+    if(u&&!seen.js.has(u)){ seen.js.add(u); out.scripts.push({url:u,type:"JS",name:fileName(u)}); }
+  });
+  doc.querySelectorAll('link[rel="stylesheet"],link[rel="preload"][as="style"]').forEach(function(el){
+    var u=resolveUrl(baseUrl,el.getAttribute("href"));
+    if(u&&!seen.css.has(u)){ seen.css.add(u); out.styles.push({url:u,type:"CSS",name:fileName(u)}); }
+  });
+
+  ["video","audio","iframe","embed"].forEach(function(tag){
+    doc.querySelectorAll(tag+"[src]").forEach(function(el){
+      var u=resolveUrl(baseUrl,el.getAttribute("src"));
+      if(u&&!seen.md.has(u)){ seen.md.add(u); out.media.push({url:u,type:tag.toUpperCase(),name:fileName(u)}); }
+    });
+  });
+  // <video>/<audio> 的 <source> 子标签（视频站最常用写法）
+  doc.querySelectorAll("video source[src], audio source[src]").forEach(function(el){
+    var u=resolveUrl(baseUrl,el.getAttribute("src"));
+    if(u&&!seen.md.has(u)){ seen.md.add(u); out.media.push({url:u,type:"SOURCE",name:fileName(u)}); }
+  });
+  // 视频封面图
+  doc.querySelectorAll("video[poster]").forEach(function(el){
+    addImg(resolveUrl(baseUrl,el.getAttribute("poster")));
+  });
+  doc.querySelectorAll("object[data]").forEach(function(el){
+    var u=resolveUrl(baseUrl,el.getAttribute("data"));
+    if(u&&!seen.md.has(u)){ seen.md.add(u); out.media.push({url:u,type:"OBJECT",name:fileName(u)}); }
+  });
+  // 正则扫描整页 HTML（含内联脚本）中的音视频直链；扩展名后允许带 ?签名参数（截断会导致防盗链校验失败）
+  var mediaRe=/(https?:)?\/\/[^"'\s\\<>()]+?\.(mp4|webm|ogv|m4v|mov|mkv|flv|ts|m3u8|mp3|wav|m4a|aac|flac|m4s|mpd)(\?[^"'\s\\<>()]*)?/gi;
+  var mm,mediaExt={mp4:"VIDEO",webm:"VIDEO",ogv:"VIDEO",m4v:"VIDEO",mov:"VIDEO",mkv:"VIDEO",flv:"VIDEO",ts:"VIDEO",m3u8:"HLS",mp3:"AUDIO",wav:"AUDIO",m4a:"AUDIO",aac:"AUDIO",flac:"AUDIO",ogg:"AUDIO",m4s:"DASH",mpd:"DASH-MP"};
+  while((mm=mediaRe.exec(html))!==null){
+    var raw=mm[0];
+    if(/^data:/i.test(raw))continue;
+    var u=resolveUrl(baseUrl,raw);
+    if(u&&!seen.md.has(u)){ seen.md.add(u); out.media.push({url:u,type:mediaExt[mm[1].toLowerCase()]||"MEDIA",name:fileName(u)}); }
+  }
+  // 深度扫描内联脚本 JSON：视频站（B站/抖音类）把播放地址藏在 baseUrl/playUrl/hls 等字段里，
+  // 很多是无扩展名 CDN 链接，只能靠关键词捕获
+  var kwRe=/"(?:baseUrl|base_url|playUrl|play_url|videoUrl|video_url|hlsUrl|hls_url|hls|flvUrl|flv_url|durl|main_url|master_url|backupUrl|backup_url)"\s*:\s*"((?:https?:)?[^"{}]{10,400})"/gi;
+  while((mm=kwRe.exec(html))!==null){
+    var u2=resolveUrl(baseUrl,mm[1].replace(/\\\//g,"/").replace(/\\u002F/gi,"/"));
+    if(u2&&/^https?:\/\//.test(u2)&&!seen.md.has(u2)){
+      seen.md.add(u2);
+      var extm=/\.(m4s|mp4|m3u8|flv)(\?|$)/i.exec(u2);
+      out.media.push({url:u2,type:extm?(extm[1].toUpperCase()==="M4S"?"DASH":extm[1].toUpperCase()):"SCRIPT",name:fileName(u2)});
+    }
+  }
+
+  var info={
+    url:baseUrl, fetchedAt:new Date().toLocaleString(),
+    status:meta.status, engine:meta.engine, ms:meta.ms, bytes:meta.size,
+    contentType:meta.contentType,
+    title:(doc.title||"").trim(),
+    desc:(function(){ var m=doc.querySelector('meta[name="description"]'); return m?m.getAttribute("content"):""; })(),
+    keywords:(function(){ var m=doc.querySelector('meta[name="keywords"]'); return m?m.getAttribute("content"):""; })(),
+    charset:(function(){ var m=/charset=["']?([\w-]+)/i.exec(html.slice(0,4096)); return m?m[1].toUpperCase():"-"; })(),
+    textLen:(function(){ var c=doc.body?doc.body.cloneNode(true):null;
+      if(!c)return 0; c.querySelectorAll("script,style,noscript").forEach(function(n){n.remove()});
+      return (c.textContent||"").replace(/\s+/g," ").trim().length; })()
+  };
+  var bodyText="";
+  if(doc.body){
+    var clone=doc.body.cloneNode(true);
+    clone.querySelectorAll("script,style,noscript").forEach(function(n){n.remove()});
+    bodyText=(clone.textContent||"").replace(/\n{3,}/g,"\n\n").replace(/[ \t]+/g," ").trim().slice(0,20000);
+  }
+  return {info:info,res:out,text:bodyText,html:html};
+}
+
+/* ================= 合并与渲染 ================= */
+function merge(parsed){
+  var p=parsed;
+  store.pages.push(p.info);
+  p.res.images.forEach(function(x){ store.images.set(x.url,x); });
+  p.res.links.forEach(function(x){ store.links.set(x.url,x); });
+  p.res.scripts.forEach(function(x){ store.scripts.set(x.url,x); });
+  p.res.styles.forEach(function(x){ store.styles.set(x.url,x); });
+  p.res.media.forEach(function(x){ store.media.set(x.url,x); });
+  lastPage=p.info;
+  lastInternal=p.res.links.filter(function(l){return l.internal}).map(function(l){return l.url});
+  renderCounts();
+  renderInfo(p);
+  renderTable("linkTable",store.links,"links");
+  renderTable("codeTable",codeMap(),"code");
+  renderTable("mediaTable",store.media,"media");
+  renderImgs();
+  $("textBox").textContent=p.text||"（该页面无可提取正文）";
+  $("srcBox").textContent=p.html.slice(0,102400)+(p.html.length>102400?"\n\n... [已截断, 总长 "+p.html.length+"]":"");
+}
+
+function renderCounts(){
+  $("cPages").textContent=store.pages.length;
+  $("cImg").textContent=store.images.size;
+  $("cLink").textContent=store.links.size;
+  $("cJs").textContent=store.scripts.size;
+  $("cCss").textContent=store.styles.size;
+  $("cMedia").textContent=store.media.size;
+  $("nImg").textContent=store.images.size;
+  $("nLink").textContent=store.links.size;
+  $("nCode").textContent=store.scripts.size+store.styles.size;
+  $("nMedia").textContent=store.media.size;
+}
+
+function codeMap(){
+  var m=new Map();
+  store.scripts.forEach(function(v,k){ m.set(k,v); });
+  store.styles.forEach(function(v,k){ m.set(k,v); });
+  return m;
+}
+
+function renderInfo(p){
+  $("infoEmpty").style.display="none";
+  $("infoCard").className="card";
+  $("infoCard").style.display="block";
+  var i=p.info;
+  var rows=[
+    ["标题",i.title||"-"],["描述",i.desc||"-"],["关键词",i.keywords||"-"],
+    ["地址",i.url],["抓取时间",i.fetchedAt],
+    ["状态",i.status+" · "+i.ms+"ms · 通道:"+i.engine],
+    ["类型",i.contentType||"-"],["编码",i.charset],["大小",fmtSize(i.bytes)],
+    ["正文长度",i.textLen+" 字符"],["图片/链接",p.res.images.length+" / "+p.res.links.length]
+  ];
+  $("infoKv").innerHTML=rows.map(function(r){
+    return "<dt>"+esc(r[0])+"</dt><dd>"+esc(r[1])+"</dd>";
+  }).join("");
+}
+
+function fmtSize(n){
+  if(n==null)return"-";
+  if(n<1024)return n+" B";
+  if(n<1048576)return (n/1024).toFixed(1)+" KB";
+  return (n/1048576).toFixed(2)+" MB";
+}
+
+function filterMap(map,q){
+  if(!q)return map;
+  var out=new Map();
+  map.forEach(function(v,k){ if(k.toLowerCase().includes(q)) out.set(k,v); });
+  return out;
+}
+
+function renderTable(tid,map,kind){
+  var tb=document.querySelector("#"+tid+" tbody");
+  var q=( (kind==="links"?$("fLink"):kind==="code"?$("fCode"):$("fMedia")).value||"").toLowerCase();
+  var m=filterMap(map,q);
+  var rows=[];
+  m.forEach(function(v,k){
+    var tag="";
+    if(kind==="links") tag='<span class="tag '+(v.internal?"in":"ex")+'">'+(v.internal?"内链":"外链")+"</span>";
+    else tag='<span class="tag '+(v.type==="CSS"?"ex":"img")+'">'+esc(v.type||"RES")+"</span>";
+    var host="";
+    try{ host=new URL(k).host; }catch(e){}
+    var ops='<button class="btn mini" onclick="copyTxt(\''+jsq(k)+'\')">复制</button> '+
+      '<button class="btn mini" onclick="openUrl(\''+jsq(k)+'\')">打开</button>';
+    if(kind==="media") ops+=' <button class="btn mini" onclick="smartDl(\''+jsq(k)+'\','+(lastPage?jsq(lastPage.url):'\'\'')+')">下载</button>';
+    rows.push("<tr><td>"+tag+"</td><td class=u><span>"+esc(k)+"</span><span class=host>"+esc(host)+"</span></td>"+
+      '<td class=ops>'+ops+'</td></tr>');
+  });
+  tb.innerHTML=rows.join("")||'<tr><td colspan=3 style="color:var(--dim)">（无匹配项）</td></tr>';
+}
+
+function jsq(s){ return String(s).replace(/\\/g,"\\\\").replace(/'/g,"\\'").replace(/"/g,"&quot;"); }
+function copyTxt(s){
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(s).then(function(){toast("已复制到剪贴板");},function(){fallbackCopy(s);});
+  }else fallbackCopy(s);
+}
+function fallbackCopy(s){
+  var ta=document.createElement("textarea");ta.value=s;document.body.appendChild(ta);
+  ta.select();try{document.execCommand("copy");toast("已复制到剪贴板");}catch(e){toast("复制失败",true);}
+  document.body.removeChild(ta);
+}
+function openUrl(u){ window.open(u,"_blank","noopener"); }
+
+function renderImgs(){
+  var box=$("imgsBox");
+  var q=($("fImg").value||"").toLowerCase();
+  var arr=Array.from(filterMap(store.images,q).values());
+  if(!arr.length){ box.innerHTML='<div class="empty">（无图片资源）</div>';return; }
+  box.innerHTML=arr.slice(0,200).map(function(x){
+    return '<div class="icard"><div class="th"><img loading="lazy" referrerpolicy="no-referrer" src="'+esc(x.url)+'" '+
+      'onerror="this.parentElement.textContent=\'缩略图加载失败\'"></div>'+
+      '<div class="meta"><div class="nm" title="'+esc(x.url)+'">'+esc(x.name)+'</div>'+
+      '<div class="ops2"><button class="btn mini" onclick="copyTxt(\''+jsq(x.url)+'\')">复制</button>'+
+      '<button class="btn mini" onclick="openUrl(\''+jsq(x.url)+'\')">打开</button>'+
+      '<button class="btn mini" onclick="smartDl(\''+jsq(x.url)+'\','+(lastPage?jsq(lastPage.url):'\'\'')+')">下载</button></div></div></div>';
+  }).join("")+(arr.length>200?'<div class="empty">仅显示前 200 张，共 '+arr.length+" 张，可用筛选缩小范围</div>":"");
+}
+
+/* 二进制下载（走云函数，失败则新窗口打开） */
+/* ================= 智能下载器：单次直取 / Range分块 / HLS拼接 ================= */
+var dlBusy=false;
+function proxyUrl(u,p){
+  p=p||{};
+  var s=TCB_PROXY+"?url="+encodeURIComponent(u);
+  if(p.head)s+="&head=1";
+  if(p.binary)s+="&binary=1";
+  if(p.raw)s+="&raw=1";
+  if(p.range)s+="&range="+encodeURIComponent(p.range);
+  if(p.referer)s+="&referer="+encodeURIComponent(p.referer);
+  if(p.max)s+="&max="+p.max;
+  if(p.filename)s+="&filename="+encodeURIComponent(p.filename);
+  return s;
+}
+function saveBlob(blob,name){
+  var a=document.createElement("a");
+  a.href=URL.createObjectURL(blob);a.download=name;a.click();
+  setTimeout(function(){URL.revokeObjectURL(a.href)},8000);
+}
+function fmtMB(n){ return (n/1048576).toFixed(1)+"MB"; }
+async function probeHead(u,referer){
+  var to=withTimeout(20000);
+  try{
+    var r=await fetch(proxyUrl(u,{head:1,referer:referer}),{signal:to.signal});
+    var j=await r.json(); to.cancel();
+    if(!j.ok) throw new Error(j.error||"HTTP "+j.status);
+    return j;
+  }catch(e){ to.cancel(); return null; }
+}
+async function fetchRaw(u,p){
+  var to=withTimeout(90000);
+  var r=await fetch(proxyUrl(u,p),{signal:to.signal});
+  to.cancel();
+  if(!r.ok) throw new Error("HTTP "+r.status);
+  return await r.arrayBuffer();
+}
+async function fetchB64(u,p){
+  var to=withTimeout(30000);
+  var r=await fetch(proxyUrl(u,Object.assign({binary:1},p||{})),{signal:to.signal});
+  to.cancel();
+  var j=await r.json();
+  if(!j.ok||!j.base64) throw new Error(j.error||"无数据");
+  var bin=atob(j.base64),u8=new Uint8Array(bin.length);
+  for(var i=0;i<bin.length;i++)u8[i]=bin.charCodeAt(i);
+  return u8;
+}
+async function smartDl(url,referer,name){
+  if(!TCB_PROXY){ openUrl(url); return; }
+  if(dlBusy){ toast("已有下载任务进行中，请稍候",true); return; }
+  if(/\.m3u8(\?|#|$)/i.test(url)){
+    dlBusy=true;
+    try{ await dlHls(url,referer,name); }
+    catch(e){ toast("HLS 下载失败: "+e.message,true); log("ERR","HLS "+url+" · "+e.message); }
+    finally{ dlBusy=false; }
+    return;
+  }
+  dlBusy=true;
+  try{
+    name=name||fileName(url);
+    toast("探测文件信息: "+name);
+    var meta=await probeHead(url,referer);
+    var size=meta?meta.contentLength:0;
+    var ct=(meta&&meta.contentType)||"application/octet-stream";
+    if(/\.mp4/i.test(name)&&ct==="application/octet-stream")ct="video/mp4";
+    if(size&&size<=4*1024*1024){
+      toast("下载中: "+name+" ("+fmtMB(size)+")");
+      var buf=await fetchRaw(url,{raw:1,referer:referer,max:6291456,filename:name});
+      saveBlob(new Blob([buf],{type:ct}),name);
+      log("OK","已下载 "+name+" · "+fmtMB(buf.byteLength));
+      toast("已下载: "+name+" · "+fmtMB(buf.byteLength));
+      return;
+    }
+    if(size&&!/bytes/i.test((meta&&meta.acceptRanges)||"")){
+      toast("文件 "+fmtMB(size)+" 且服务器不支持分段，改用新窗口直连下载",true);
+      openUrl(url); return;
+    }
+    if(!size){
+      // HEAD 被拒（部分 CDN 不支持 HEAD），盲分块直到取完
+      var CH2=5*1024*1024,parts2=[],off2=0,t02=Date.now();
+      log("INFO","HEAD 被拒，盲分块下载 "+name);
+      while(true){
+        var b2=await fetchRaw(url,{raw:1,referer:referer,range:"bytes="+off2+"-"+(off2+CH2-1),max:6291456});
+        if(b2.byteLength===0)break;
+        parts2.push(b2); off2+=b2.byteLength;
+        toast("分块下载中 已取 "+fmtMB(off2));
+        if(b2.byteLength<CH2)break;
+      }
+      if(!parts2.length) throw new Error("无数据");
+      saveBlob(new Blob(parts2,{type:ct}),name);
+      log("OK","已下载 "+name+" · "+fmtMB(off2)+" · "+Math.round((Date.now()-t02)/1000)+"s");
+      toast("已下载: "+name+" · "+fmtMB(off2));
+      return;
+    }
+    var CH=5*1024*1024,parts=[],off=0,n=Math.ceil(size/CH),t0=Date.now();
+    log("INFO","大文件分块下载 "+name+" · "+fmtMB(size)+" · "+n+" 块");
+    while(off<size){
+      var end=Math.min(off+CH,size)-1;
+      var buf=await fetchRaw(url,{raw:1,referer:referer,range:"bytes="+off+"-"+end,max:6291456});
+      if(buf.byteLength===0) throw new Error("分块返回空 (offset "+off+")");
+      parts.push(buf); off+=buf.byteLength;
+      toast("分块下载中 "+Math.round(off/size*100)+"% ("+fmtMB(off)+"/"+fmtMB(size)+")");
+    }
+    saveBlob(new Blob(parts,{type:ct}),name);
+    log("OK","已下载 "+name+" · "+fmtMB(size)+" · "+Math.round((Date.now()-t0)/1000)+"s");
+    toast("已下载: "+name+" · "+fmtMB(size));
+  }catch(e){
+    toast("下载失败: "+e.message+"，已尝试新窗口打开",true);
+    log("ERR","下载失败 "+url+" · "+e.message);
+    openUrl(url);
+  }finally{ dlBusy=false; }
+}
+/* ---------- HLS(m3u8) 拼接下载：master选流/分段下载/AES-128解密 ---------- */
+async function dlHls(u,referer,name){
+  toast("获取播放列表: "+(name||fileName(u)));
+  var to=withTimeout(30000);
+  var r=await fetch(proxyUrl(u,{referer:referer}),{signal:to.signal});
+  to.cancel();
+  var j=await r.json();
+  if(!j.ok) throw new Error(j.error||"列表获取失败");
+  var text=j.text||"";
+  if(!/#EXTM3U/.test(text)) throw new Error("不是有效的 m3u8 播放列表");
+  if(/#EXT-X-STREAM-INF/.test(text)){
+    var lines=text.split(/\r?\n/),best=null,bw=0;
+    for(var i=0;i<lines.length;i++){
+      if(/^#EXT-X-STREAM-INF/.test(lines[i])){
+        var m=/BANDWIDTH=(\d+)/.exec(lines[i]);
+        var cur=m?parseInt(m[1],10):0;
+        var nxt=lines[i+1];
+        if(nxt&&nxt.trim()&&!/^#/.test(nxt.trim())&&cur>=bw){ bw=cur; best=resolveUrl(u,nxt.trim()); }
+      }
+    }
+    if(!best) throw new Error("播放列表中未找到子列表");
+    log("INFO","主列表 → 选择 "+Math.round(bw/1024)+"kbps 码率流");
+    return dlHls(best,referer,name);
+  }
+  var lines=text.split(/\r?\n/);
+  var segs=[],key=null,mapUri=null,seq=0;
+  for(var i=0;i<lines.length;i++){
+    var L=lines[i].trim(); if(!L)continue;
+    if(/^#EXT-X-MEDIA-SEQUENCE/.test(L)){ seq=parseInt(L.split(":")[1],10)||0; continue; }
+    if(/^#EXT-X-KEY/.test(L)){
+      var km=/METHOD=([A-Za-z0-9-]+)/.exec(L),ku=/URI="([^"]+)"/.exec(L),ivm=/IV=0[xX]([0-9a-fA-F]+)/.exec(L);
+      if(km&&km[1]!=="NONE"&&ku) key={method:km[1],uri:resolveUrl(u,ku[1]),iv:ivm?ivm[1]:null};
+      continue;
+    }
+    if(/^#EXT-X-MAP/.test(L)){
+      var mm2=/URI="([^"]+)"/.exec(L);
+      if(mm2) mapUri=resolveUrl(u,mm2[1]);
+      continue;
+    }
+    if(/^#/.test(L))continue;
+    segs.push(resolveUrl(u,L));
+  }
+  if(!segs.length&&!mapUri) throw new Error("列表中没有分段");
+  if(key&&key.method!=="AES-128") throw new Error("不支持的加密方式: "+key.method);
+  var outName=(name||fileName(u)).replace(/\.m3u8(\?.*)?$/i,"")||"video";
+  var allUris=segs.join("");
+  outName+=(mapUri||/\.m4s|\.mp4/i.test(allUris))?"_hls.mp4":"_hls.ts";
+  var cryptoKey=null;
+  if(key){
+    var k8=await fetchB64(key.uri,{referer:referer});
+    cryptoKey=await crypto.subtle.importKey("raw",k8,{name:"AES-CBC"},false,["decrypt"]);
+    if(!key.iv) key.iv=seq;
+  }
+  var all=[],done=0,total=segs.length+(mapUri?1:0);
+  if(mapUri){
+    toast("下载初始化段 1/"+total);
+    all.push(await fetchRaw(mapUri,{raw:1,referer:referer,max:6291456})); done++;
+  }
+  for(var i=0;i<segs.length;i++){
+    toast("HLS 分段 "+(done+1)+"/"+total+" ("+Math.round(done/total*100)+"%)");
+    var ab=await fetchRaw(segs[i],{raw:1,referer:referer,max:6291456});
+    if(cryptoKey){
+      var ivBytes=new Uint8Array(16);
+      if(typeof key.iv==="string"){ for(var k=0;k<16;k++) ivBytes[k]=parseInt(key.iv.substr(k*2,2),16); }
+      else { var v=key.iv; for(var k=15;k>=0;k--){ ivBytes[k]=v&0xff; v=Math.floor(v/256); } }
+      ab=await crypto.subtle.decrypt({name:"AES-CBC",iv:ivBytes},cryptoKey,ab);
+    }
+    all.push(ab); done++;
+  }
+  saveBlob(new Blob(all,{type:outName.endsWith(".mp4")?"video/mp4":"video/mp2t"}),outName);
+  log("OK","已下载 "+outName+" · "+total+" 段拼接完成");
+  toast("已下载: "+outName+" ("+total+" 段)");
+}
+
+/* ================= 主流程 ================= */
+function isMediaUrl(u){
+  return /\.(mp4|webm|ogv|m4v|mov|mkv|flv|m3u8|mp3|wav|m4a|aac|flac|ogg|m4s|mpd)(\?|#|$)/i.test(u||"");
+}
+
+async function crawl(rawUrl){
+  if(busy)return;
+  // 书签助手提取的直链格式：url##ref=来源页面 —— ref 作为防盗链 Referer
+  var refm=/##ref=(.+)$/.exec(rawUrl||"");
+  var pageRef=refm?refm[1].trim():"";
+  if(refm) rawUrl=rawUrl.slice(0,refm.index);
+  var url=normalize(rawUrl);
+  if(!url){ toast("请输入有效的网址（需包含域名，如 example.com）",true);return; }
+  // 媒体直链（.mp4/.m3u8/...）不走页面解析，直接经云函数代理下载
+  if(isMediaUrl(url)){
+    setBusy(true);
+    log("INFO","检测到音视频直链，转云函数代理下载: "+url+(pageRef?" (Referer: "+pageRef+")":""));
+    toast("检测到音视频直链，正在经云函数下载...");
+    try{ await smartDl(url,pageRef); }catch(e){ log("ERR","下载异常: "+e.message); }
+    setBusy(false);
+    return;
+  }
+  setBusy(true);
+  toast("抓取中: "+url);
+  log("INFO","开始抓取 "+url);
+  var res=null,used=null,errs=[];
+  for(var i=0;i<ENGINES.length;i++){
+    var eng=ENGINES[i];
+    log("INFO","尝试通道: "+eng.name);
+    var t0=performance.now();
+    try{
+      var r=await eng.run(url);
+      if(r&&r.ok&&typeof r.text==="string"&&r.text.length>0){
+        r.ms=Math.round(performance.now()-t0);
+        res=r;used=eng.name;break;
+      }
+      errs.push(eng.name+": "+((r&&r.error)||"空响应"));
+      log("WARN",eng.name+" 未成功: "+((r&&r.error)||"空响应"));
+    }catch(e){
+      errs.push(eng.name+": "+e.message);
+      log("WARN",eng.name+" 异常: "+e.message);
+    }
+  }
+  if(!res){
+    log("ERR","全部通道失败: "+url);
+    var pInf=$("p-info");
+    if(curTab!=="info") switchTab("info");
+    $("infoEmpty").style.display="none";
+    $("infoCard").style.display="block";
+    $("infoCard").className="card errcard";
+    $("infoKv").innerHTML="<dt>结果</dt><dd>全部通道均失败</dd><dt>地址</dt><dd>"+esc(url)+"</dd>"+
+      "<dt>详情</dt><dd>"+errs.map(esc).join("<br>")+"</dd>";
+    toast("抓取失败：所有通道均无法获取该页面",true);
+    setBusy(false);
+    return;
+  }
+  log("OK","通道 ["+used+"] 成功 · HTTP "+res.status+" · "+fmtSize(res.size)+" · "+res.ms+"ms");
+  var parsed=parsePage(res.text,res.finalUrl||url,{status:res.status,engine:used,ms:res.ms,size:res.size,contentType:res.contentType});
+  merge(parsed);
+  toast("抓取成功（通道:"+used+"）· 图片 "+parsed.res.images.length+" · 链接 "+parsed.res.links.length+
+        " · 脚本/样式 "+(parsed.res.scripts.length+parsed.res.styles.length));
+  setBusy(false);
+}
+
+async function batchCrawl(){
+  if(busy)return;
+  if(!lastInternal.length){ toast("请先抓取一个页面，再批量抓取其内链",true);return; }
+  var urls=lastInternal.slice(0,BATCH_LIMIT);
+  toast("批量抓取 "+urls.length+" 个内链...");
+  for(var i=0;i<urls.length;i++){
+    log("INFO","[批量 "+(i+1)+"/"+urls.length+"] "+urls[i]);
+    await crawl(urls[i]);
+    if(i<urls.length-1) await new Promise(function(r){setTimeout(r,BATCH_DELAY)});
+  }
+  toast("批量抓取完成 · 已爬页面共 "+store.pages.length);
+}
+
+/* ================= 导出 ================= */
+function dlBlob(name,content,type){
+  var blob=new Blob([content],{type:type});
+  var a=document.createElement("a");
+  a.href=URL.createObjectURL(blob);a.download=name;a.click();
+  setTimeout(function(){URL.revokeObjectURL(a.href)},4000);
+}
+function exportJson(){
+  var data={exportedAt:new Date().toISOString(),pages:store.pages,
+    images:Array.from(store.images.keys()),
+    links:Array.from(store.links.values()),
+    scripts:Array.from(store.scripts.keys()),
+    styles:Array.from(store.styles.keys()),
+    media:Array.from(store.media.keys())};
+  dlBlob("crawler-export-"+Date.now()+".json",JSON.stringify(data,null,2),"application/json");
+  log("OK","已导出 JSON 清单");
+}
+function exportTxt(){
+  var L=[];
+  L.push("SUPER CRAWLER 导出 · "+new Date().toLocaleString());
+  L.push("已爬页面: "+store.pages.length);
+  store.pages.forEach(function(p){L.push("  [页] "+p.url)});
+  L.push("");
+  L.push("图片("+store.images.size+"):");
+  Array.from(store.images.keys()).forEach(function(u){L.push("  "+u)});
+  L.push("");
+  L.push("链接("+store.links.size+"):");
+  Array.from(store.links.values()).forEach(function(l){L.push("  ["+(l.internal?"内":"外")+"] "+l.url)});
+  L.push("");
+  L.push("脚本("+store.scripts.size+"):");
+  Array.from(store.scripts.keys()).forEach(function(u){L.push("  "+u)});
+  L.push("");
+  L.push("样式("+store.styles.size+"):");
+  Array.from(store.styles.keys()).forEach(function(u){L.push("  "+u)});
+  L.push("");
+  L.push("媒体("+store.media.size+"):");
+  Array.from(store.media.keys()).forEach(function(u){L.push("  "+u)});
+  dlBlob("crawler-export-"+Date.now()+".txt",L.join("\n"),"text/plain;charset=utf-8");
+  log("OK","已导出 TXT 清单");
+}
+
+/* ================= 事件绑定 ================= */
+function switchTab(p){
+  curTab=p;
+  document.querySelectorAll(".tab").forEach(function(t){
+    t.classList.toggle("on",t.getAttribute("data-p")===p);
+  });
+  document.querySelectorAll(".panel").forEach(function(el){
+    el.classList.toggle("on",el.id==="p-"+p);
+  });
+}
+document.querySelectorAll(".tab").forEach(function(t){
+  t.addEventListener("click",function(){ switchTab(t.getAttribute("data-p")); });
+});
+$("go").addEventListener("click",function(){ crawl($("url").value); });
+$("url").addEventListener("keydown",function(e){ if(e.key==="Enter")crawl($("url").value); });
+$("clear").addEventListener("click",function(){
+  store.pages=[];store.images.clear();store.links.clear();
+  store.scripts.clear();store.styles.clear();store.media.clear();
+  lastPage=null;lastInternal=[];
+  $("infoCard").style.display="none";$("infoCard").className="card";
+  $("infoEmpty").style.display="block";
+  $("linkTable").querySelector("tbody").innerHTML="";
+  $("codeTable").querySelector("tbody").innerHTML="";
+  $("mediaTable").querySelector("tbody").innerHTML="";
+  $("imgsBox").innerHTML="";
+  $("textBox").textContent="（暂无正文。抓取页面后自动提取可见文本。）";
+  $("srcBox").textContent="（暂无源码。抓取页面后展示原始 HTML，上限 100KB。）";
+  renderCounts();toast("已清空全部结果");log("INFO","已清空结果");
+});
+$("btnBatch").addEventListener("click",batchCrawl);
+$("expJson").addEventListener("click",exportJson);
+$("expTxt").addEventListener("click",exportTxt);
+$("fImg").addEventListener("input",renderImgs);
+$("fLink").addEventListener("input",function(){renderTable("linkTable",store.links,"links")});
+$("fCode").addEventListener("input",function(){renderTable("codeTable",codeMap(),"code")});
+$("fMedia").addEventListener("input",function(){renderTable("mediaTable",store.media,"media")});
+
+/* 初始化 */
+(function(){
+  if(TCB_PROXY){
+    log("OK","云函数通道已配置: "+TCB_PROXY.replace(/\?.*$/,"?..."));
+  }else{
+    log("WARN","云函数通道未配置，将使用直连与公共代理");
+  }
+  log("INFO","SUPER CRAWLER 就绪 · 引擎链: 云函数 > 直连 > 公共代理A/B/C");
+
+  /* ================= 书签提取助手：B站/抖音等动态加载+反爬站点专用 =================
+     原理：书签代码运行在用户自己打开的视频页面（同源），可读取 window.__playinfo__ 等渲染后数据，
+     提取真实视频直链并拼上 ##ref=来源页（防盗链 Referer），复制后回到爬虫粘贴即下载。 */
+  var BM_CODE = "javascript:(function(){var%20urls=[],p=window.__playinfo__;if(p&&p.data)p=p.data;"
+    + "if(p&&p.dash){(p.dash.video||[]).slice(0,3).forEach(function(v){v.baseUrl&&urls.push(v.baseUrl)});"
+    + "(p.dash.audio||[]).slice(0,2).forEach(function(a){a.baseUrl&&urls.push(a.baseUrl)})}"
+    + "if(p&&p.durl)p.durl.forEach(function(d){(d.url||(d.backup_url&&d.backup_url[0]))&&urls.push(d.url||(d.backup_url&&d.backup_url[0]))});"
+    + "if(p&&p.url)urls.push(p.url);"
+    + "document.querySelectorAll('video[src],video source[src],audio[src]').forEach(function(el){el.src&&urls.push(el.src)});"
+    + "document.querySelectorAll('iframe[src]').forEach(function(el){/(embed|player)/i.test(el.src)&&urls.push(el.src)});"
+    + "urls=urls.filter(Boolean).filter(function(u,i,a){return a.indexOf(u)===i});"
+    + "if(!urls.length){alert('未发现视频直链');return}"
+    + "var%20out=urls[0]+'##ref='+location.href;"
+    + "(navigator.clipboard?navigator.clipboard.writeText(out):Promise.reject())"
+    + ".then(function(){alert('已复制最佳画质视频地址（共发现'+urls.length+'个）\\n\\n回到超级爬虫页面，粘贴到输入框回车即下载')},"
+    + "function(){prompt('视频地址（复制全部或第一行）：',out)})})()";
+  var bmBtn=document.getElementById("bmBtn");
+  if(bmBtn)bmBtn.addEventListener("click",function(){
+    var done=function(){
+      toast("书签代码已复制！3 步使用：① 浏览器书签栏右键→添加书签，网址栏粘贴刚才的代码 ② 打开视频页面，点这个书签 ③ 回到本页粘贴下载");
+      log("OK","书签提取代码已复制到剪贴板");
+    };
+    if(navigator.clipboard&&navigator.clipboard.writeText){
+      navigator.clipboard.writeText(BM_CODE).then(done,function(){prompt("复制下面整行代码作为书签网址：",BM_CODE)});
+    }else{ prompt("复制下面整行代码作为书签网址：",BM_CODE); }
+  });
+})();
+</script>
 </body>
 </html>
