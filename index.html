@@ -3,979 +3,451 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SUPER CRAWLER · 超级爬虫</title>
+<title>SUPER CRAWLER X · 超级爬虫</title>
 <style>
 :root{
-  --bg:#0a0e14; --panel:#0f1620; --panel2:#141d2b; --line:#1e2a3a; --line2:#28394f;
-  --txt:#c9d6e2; --dim:#6b8098; --acc:#00e676; --acc2:#39c5ff; --warn:#ffb74d; --err:#ff5c6c;
+  --bg:#070b10;--panel:#0e1520;--panel2:#131c2a;--line:#1d2a3c;--line2:#2b3e58;
+  --txt:#cfe0ee;--dim:#5f7590;--acc:#00e676;--acc2:#39c5ff;--warn:#ffb74d;--err:#ff5c6c;--mag:#e05cff;
   --mono:'Cascadia Code','Consolas','Courier New',monospace;
 }
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{background:var(--bg);color:var(--txt);font-family:var(--mono);font-size:14px}
-a{color:var(--acc2);text-decoration:none}
+a{color:var(--acc2);text-decoration:none;word-break:break-all}
 a:hover{text-decoration:underline}
 button{font-family:var(--mono);cursor:pointer}
 ::selection{background:var(--acc);color:#000}
-
-.wrap{max-width:1200px;margin:0 auto;padding:0 16px 40px}
-
-/* header */
-header{border-bottom:1px solid var(--line);background:
-  repeating-linear-gradient(0deg,transparent 0 3px,rgba(0,230,118,.012) 3px 4px),var(--bg)}
-.hd{max-width:1200px;margin:0 auto;padding:18px 16px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
-.logo{font-size:22px;letter-spacing:2px;color:var(--acc);text-shadow:0 0 12px rgba(0,230,118,.45)}
+.wrap{max-width:1280px;margin:0 auto;padding:0 16px 60px}
+header{border-bottom:1px solid var(--line);background:repeating-linear-gradient(0deg,transparent 0 3px,rgba(0,230,118,.012) 3px 4px)}
+.hd{max-width:1280px;margin:0 auto;padding:16px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.logo{font-size:22px;letter-spacing:2px;color:var(--acc);text-shadow:0 0 14px rgba(0,230,118,.5)}
 .logo b{color:var(--txt)}
-.hd .sub{color:var(--dim);font-size:12px}
-.hd .env{margin-left:auto;font-size:12px;color:var(--dim);border:1px solid var(--line2);
-  padding:4px 10px;border-radius:4px;background:var(--panel)}
-.hd .env i{color:var(--acc);font-style:normal}
-
-/* controls */
-.controls{margin:18px 0 10px;display:flex;gap:8px;flex-wrap:wrap}
-.urlbox{flex:1 1 420px;display:flex}
-.urlbox .scheme{background:var(--panel2);border:1px solid var(--line2);border-right:none;
-  border-radius:6px 0 0 6px;color:var(--dim);display:flex;align-items:center;padding:0 10px;font-size:13px}
-.urlbox input{flex:1;background:var(--panel2);border:1px solid var(--line2);color:var(--txt);
-  padding:11px 12px;font-family:var(--mono);font-size:14px;border-radius:0 6px 6px 0;outline:none;min-width:0}
-.urlbox input:focus{border-color:var(--acc);box-shadow:0 0 0 2px rgba(0,230,118,.15)}
-.btn{background:var(--panel2);border:1px solid var(--line2);color:var(--txt);padding:10px 16px;
-  border-radius:6px;font-size:13px;transition:all .12s;white-space:nowrap}
-.btn:hover{border-color:var(--acc);color:var(--acc);background:#12241c}
-.btn:active{transform:translateY(1px)}
-.btn:focus-visible{outline:2px solid var(--acc2);outline-offset:2px}
-.btn.primary{background:var(--acc);border-color:var(--acc);color:#04140b;font-weight:bold}
-.btn.primary:hover{background:#2cf59a;color:#04140b}
-.btn.primary:disabled{opacity:.45;cursor:not-allowed;transform:none}
+.sub{color:var(--dim);font-size:12px}
+.pill{margin-left:auto;font-size:12px;color:var(--dim);border:1px solid var(--line2);padding:4px 10px;border-radius:4px;background:var(--panel)}
+.pill i{color:var(--acc);font-style:normal}
+.searchbar{display:flex;gap:8px;margin:18px 0 10px;flex-wrap:wrap}
+.searchbar input{flex:1;min-width:300px;background:var(--panel);border:1px solid var(--line2);color:var(--txt);
+  font-family:var(--mono);font-size:14px;padding:12px 14px;border-radius:6px;outline:none}
+.searchbar input:focus{border-color:var(--acc);box-shadow:0 0 0 1px rgba(0,230,118,.25)}
+.btn{background:var(--panel2);border:1px solid var(--line2);color:var(--txt);padding:11px 16px;border-radius:6px;font-size:13px;transition:.15s}
+.btn:hover{border-color:var(--acc);color:var(--acc)}
+.btn.primary{background:var(--acc);color:#001a0c;border-color:var(--acc);font-weight:bold}
+.btn.primary:hover{filter:brightness(1.15)}
 .btn:disabled{opacity:.45;cursor:not-allowed}
-.btn.mini{padding:3px 8px;font-size:12px;border-radius:4px}
-
-.busybar{height:2px;background:var(--line);overflow:hidden;border-radius:2px;margin-bottom:6px}
-.busybar.on::after{content:"";display:block;height:100%;width:40%;background:linear-gradient(90deg,transparent,var(--acc),transparent);
-  animation:slide 1s linear infinite}
-@keyframes slide{from{transform:translateX(-100%)}to{transform:translateX(350%)}}
-.stateline{font-size:12px;color:var(--dim);margin-bottom:14px;min-height:18px}
-.stateline b{color:var(--acc)}
-.stateline .err{color:var(--err)}
-
-/* chips */
-.chips{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
-.chip{border:1px solid var(--line2);background:var(--panel);padding:5px 12px;border-radius:20px;font-size:12px;color:var(--dim)}
-.chip i{font-style:normal;color:var(--acc);font-weight:bold;margin-left:4px}
-
-/* tabs */
-.tabs{display:flex;gap:2px;border-bottom:1px solid var(--line);overflow-x:auto;scrollbar-width:thin}
-.tab{background:none;border:none;border-bottom:2px solid transparent;color:var(--dim);
-  padding:10px 16px;font-size:13px;transition:color .12s;white-space:nowrap}
-.tab:hover{color:var(--txt)}
-.tab:focus-visible{outline:2px solid var(--acc2);outline-offset:-2px}
-.tab.on{color:var(--acc);border-bottom-color:var(--acc)}
-.tab .n{font-size:11px;color:var(--dim);margin-left:4px}
-
-/* panels */
-.panel{display:none;padding:14px 0;min-height:220px}
-.panel.on{display:block}
-.card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:14px}
-.grid2{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:10px}
-.kv{display:grid;grid-template-columns:110px 1fr;gap:6px 12px;font-size:13px}
-.kv dt{color:var(--dim)}
-.kv dd{word-break:break-all}
-
-.toolbar{display:flex;gap:8px;align-items:center;margin-bottom:10px;flex-wrap:wrap}
-.toolbar input{background:var(--panel2);border:1px solid var(--line2);color:var(--txt);padding:7px 10px;
-  border-radius:5px;font-family:var(--mono);font-size:12px;outline:none;width:200px}
-.toolbar input:focus{border-color:var(--acc)}
-.toolbar .spacer{flex:1}
-
-table{width:100%;border-collapse:collapse;font-size:13px}
-th{color:var(--dim);text-align:left;font-weight:normal;border-bottom:1px solid var(--line);padding:6px 8px;font-size:12px}
-td{border-bottom:1px solid var(--line);padding:6px 8px;vertical-align:middle}
-tr:hover td{background:rgba(0,230,118,.03)}
-td.u{word-break:break-all;max-width:520px}
-td.u span{color:var(--txt)}
-td .host{color:var(--dim);font-size:11px;display:block}
-.tag{display:inline-block;font-size:11px;padding:1px 7px;border-radius:3px;border:1px solid var(--line2);color:var(--dim)}
-.tag.in{color:var(--acc);border-color:rgba(0,230,118,.4)}
-.tag.ex{color:var(--warn);border-color:rgba(255,183,77,.4)}
-.tag.img{color:var(--acc2);border-color:rgba(57,197,255,.4)}
-.ops{white-space:nowrap;text-align:right}
-
-/* images */
-.imgs{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px}
-.icard{background:var(--panel);border:1px solid var(--line);border-radius:8px;overflow:hidden;transition:border-color .12s}
-.icard:hover{border-color:var(--acc)}
-.icard .th{height:120px;background:#060a0f center/contain no-repeat;display:flex;align-items:center;justify-content:center;color:var(--dim);font-size:11px}
-.icard .th img{width:100%;height:100%;object-fit:contain;display:block}
-.icard .meta{padding:8px}
-.icard .meta .nm{font-size:11px;color:var(--txt);word-break:break-all;max-height:28px;overflow:hidden}
-.icard .meta .ops2{display:flex;gap:6px;margin-top:7px}
-
-/* text & source */
-pre.flow{background:#060a0f;border:1px solid var(--line);border-radius:8px;padding:14px;font-size:12px;
-  line-height:1.7;white-space:pre-wrap;word-break:break-word;max-height:480px;overflow:auto;color:#9fb3c8}
-pre.flow::-webkit-scrollbar,.tabs::-webkit-scrollbar,section.log::-webkit-scrollbar{width:8px;height:8px}
-pre.flow::-webkit-scrollbar-thumb,section.log::-webkit-scrollbar-thumb{background:var(--line2);border-radius:4px}
-
-/* log */
-section.log{margin-top:18px;background:#060a0f;border:1px solid var(--line);border-radius:8px;
-  height:170px;overflow-y:auto;padding:10px 12px;font-size:12px;line-height:1.8}
-.logline .t{color:var(--dim)}
-.logline .ok{color:var(--acc)}
-.logline .warn{color:var(--warn)}
-.logline .err{color:var(--err)}
-.logline .info{color:var(--acc2)}
-
-/* empty / error */
-.empty{padding:50px 20px;text-align:center;color:var(--dim)}
-.empty .big{font-size:15px;color:var(--txt);margin-bottom:10px}
-.errcard{border-color:rgba(255,92,108,.5)}
-.errcard h3{color:var(--err);font-size:14px;margin-bottom:8px}
-.errcard li{margin:4px 0 4px 18px;color:var(--dim);font-size:12px}
-
-footer{margin-top:26px;border-top:1px solid var(--line);padding-top:14px;color:var(--dim);font-size:11px;line-height:1.9}
-footer b{color:var(--warn)}
-
-@media (max-width:640px){
-  .hd{padding:14px 12px}.hd .env{margin-left:0}
-  td.u{max-width:180px}
-  .ops .btn.mini{padding:3px 6px}
-  .kv{grid-template-columns:90px 1fr}
-}
+.quick{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;font-size:12px}
+.chip{border:1px solid var(--line2);background:var(--panel);color:var(--dim);padding:5px 10px;border-radius:20px;cursor:pointer}
+.chip:hover{color:var(--acc2);border-color:var(--acc2)}
+.stats{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0 12px}
+.stat{border:1px solid var(--line);background:var(--panel);padding:8px 14px;border-radius:6px;font-size:12px;color:var(--dim);cursor:pointer}
+.stat b{color:var(--txt);font-size:15px;margin-right:6px}
+.stat.on{border-color:var(--acc);color:var(--acc)}
+.stat.on b{color:var(--acc)}
+.list{display:flex;flex-direction:column;gap:8px;margin-top:8px}
+.item{display:flex;align-items:center;gap:10px;background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:10px 12px;flex-wrap:wrap}
+.item:hover{border-color:var(--line2)}
+.badge{font-size:11px;padding:3px 8px;border-radius:4px;font-weight:bold;letter-spacing:1px;flex-shrink:0}
+.b-video{background:rgba(224,92,255,.15);color:var(--mag);border:1px solid rgba(224,92,255,.4)}
+.b-audio{background:rgba(57,197,255,.12);color:var(--acc2);border:1px solid rgba(57,197,255,.4)}
+.b-image{background:rgba(0,230,118,.12);color:var(--acc);border:1px solid rgba(0,230,118,.4)}
+.b-doc{background:rgba(255,183,77,.12);color:var(--warn);border:1px solid rgba(255,183,77,.4)}
+.b-page{background:rgba(160,160,160,.12);color:#aaa;border:1px solid #444}
+.b-script{background:rgba(255,92,108,.12);color:var(--err);border:1px solid rgba(255,92,108,.4)}
+.iurl{flex:1;min-width:260px;font-size:12px;color:var(--txt);word-break:break-all}
+.isize{font-size:11px;color:var(--dim);flex-shrink:0}
+.ibtns{display:flex;gap:6px;flex-shrink:0}
+.btn.sm{padding:6px 12px;font-size:12px;border-radius:4px}
+.btn.dl{background:rgba(0,230,118,.12);border-color:rgba(0,230,118,.4);color:var(--acc)}
+.btn.dl:hover{background:rgba(0,230,118,.25)}
+#log{margin-top:18px;background:#05080c;border:1px solid var(--line);border-radius:6px;padding:12px;height:220px;overflow-y:auto;font-size:12px;line-height:1.7}
+#log div{white-space:pre-wrap;word-break:break-all}
+.l-ok{color:var(--acc)}.l-err{color:var(--err)}.l-warn{color:var(--warn)}.l-dim{color:var(--dim)}.l-info{color:var(--acc2)}
+.empty{padding:40px;text-align:center;color:var(--dim);font-size:13px;border:1px dashed var(--line2);border-radius:6px}
+.prog{position:fixed;bottom:0;left:0;right:0;background:var(--panel);border-top:1px solid var(--line2);padding:10px 16px;display:none;z-index:99}
+.prog.show{display:block}
+.prog .bar{height:6px;background:var(--line);border-radius:3px;overflow:hidden;margin-top:8px}
+.prog .fill{height:100%;background:var(--acc);width:0%;transition:width .2s}
+.prog .txt{font-size:12px;color:var(--dim)}
+footer{margin-top:26px;color:var(--dim);font-size:11px;text-align:center;line-height:1.8}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.75);display:none;align-items:center;justify-content:center;z-index:100}
+.modal.show{display:flex}
+.mbox{background:var(--panel);border:1px solid var(--line2);border-radius:8px;padding:18px;width:min(860px,94vw);max-height:88vh;overflow:auto}
+.mbox h3{font-size:14px;margin-bottom:10px;color:var(--acc)}
+.mbox pre{font-size:11px;white-space:pre-wrap;word-break:break-all;color:var(--txt);background:#05080c;padding:12px;border-radius:6px;max-height:60vh;overflow:auto}
+.mrow{display:flex;gap:8px;justify-content:flex-end;margin-top:12px}
 </style>
 </head>
 <body>
-<header>
-  <div class="hd">
-    <div class="logo">SUPER<b>■</b>CRAWLER</div>
-    <div class="sub">超级爬虫 · 输入网址 · 抓取全网资源</div>
-    <div class="env">ENV <i>chernobyl-sim</i> · CloudBase · <a href="/vip.html" style="color:#7ee787;text-decoration:underline" target="_blank">🎬 VIP视频解析</a></div>
-  </div>
-</header>
+<header><div class="hd">
+  <div class="logo">SUPER CRAWLER <b>X</b></div>
+  <div class="sub">全要素采集 · 视频/音频/图片/文档/链接 · 自动挖直链 · 免找原链</div>
+  <div class="pill">引擎<i>●</i> multi-channel</div>
+</div></header>
 
 <div class="wrap">
-  <div class="controls">
-    <div class="urlbox">
-      <span class="scheme">https://</span>
-      <input id="url" type="text" placeholder="输入要抓取的网址，例如 example.com" spellcheck="false" autocomplete="off">
-    </div>
-    <button class="btn primary" id="go">开始抓取</button>
-    <button class="btn" id="clear">清空结果</button>
+  <div class="searchbar">
+    <input id="url" placeholder="输入任意网页地址（视频页/文章页/下载页均可）回车开始抓取" spellcheck="false">
+    <button class="btn primary" id="go" onclick="crawl()">⚡ 开始抓取</button>
+    <button class="btn" onclick="extractDoc()">📄 正文/文档模式</button>
+    <button class="btn" onclick="clearAll()">清空</button>
   </div>
-  <div class="busybar" id="busybar"></div>
-  <div class="stateline" id="stateline">就绪 · 等待输入网址。回车或点击“开始抓取”。</div>
-
-  <div class="chips" id="chips">
-    <span class="chip">已爬页面<i id="cPages">0</i></span>
-    <span class="chip">图片<i id="cImg">0</i></span>
-    <span class="chip">链接<i id="cLink">0</i></span>
-    <span class="chip">脚本<i id="cJs">0</i></span>
-    <span class="chip">样式<i id="cCss">0</i></span>
-    <span class="chip">媒体<i id="cMedia">0</i></span>
+  <div class="quick">
+    <span class="chip" onclick="quick('https://www.bilibili.com')">示例: B站视频页</span>
+    <span class="chip" onclick="quick('https://v.qq.com')">示例: 腾讯视频</span>
+    <span class="chip" onclick="document.getElementById('url').focus()">提示: 回车抓取 · 资源点下载即存本地</span>
   </div>
 
-  <nav class="tabs" id="tabs">
-    <button class="tab on" data-p="info">页面信息</button>
-    <button class="tab" data-p="imgs">图片<span class="n" id="nImg">0</span></button>
-    <button class="tab" data-p="links">链接<span class="n" id="nLink">0</span></button>
-    <button class="tab" data-p="code">脚本/样式<span class="n" id="nCode">0</span></button>
-    <button class="tab" data-p="media">媒体<span class="n" id="nMedia">0</span></button>
-    <button class="tab" data-p="text">正文</button>
-    <button class="tab" data-p="src">源码</button>
-    <button class="tab" data-p="export">导出</button>
-  </nav>
+  <div class="stats" id="stats"></div>
+  <div class="list" id="list"><div class="empty">等待任务 — 输入网址回车，自动抓取并挖出页面内全部媒体直链（视频/音频/图片/文档），点下载直接保存，无需手动找链接</div></div>
 
-  <section class="panel on" id="p-info">
-    <div class="empty" id="infoEmpty">
-      <div class="big">尚无抓取结果</div>
-      在上方输入任意网址开始抓取。结果将按资源类型分类展示，可复制、打开或下载。
-    </div>
-    <div class="card" id="infoCard" style="display:none">
-      <dl class="kv" id="infoKv"></dl>
-    </div>
-  </section>
+  <div id="log"></div>
 
-  <section class="panel" id="p-imgs">
-    <div class="toolbar">
-      <input type="text" id="fImg" placeholder="筛选图片地址...">
-    </div>
-    <div class="imgs" id="imgsBox"></div>
-  </section>
-
-  <section class="panel" id="p-links">
-    <div class="toolbar">
-      <input type="text" id="fLink" placeholder="筛选链接...">
-      <span class="spacer"></span>
-      <button class="btn" id="btnBatch">批量抓取本页内链</button>
-    </div>
-    <div class="card"><table id="linkTable">
-      <thead><tr><th>类型</th><th>链接</th><th class="ops">操作</th></tr></thead>
-      <tbody></tbody>
-    </table></div>
-  </section>
-
-  <section class="panel" id="p-code">
-    <div class="toolbar"><input type="text" id="fCode" placeholder="筛选脚本/样式..."></div>
-    <div class="card"><table id="codeTable">
-      <thead><tr><th>类型</th><th>地址</th><th class="ops">操作</th></tr></thead>
-      <tbody></tbody>
-    </table></div>
-  </section>
-
-  <section class="panel" id="p-media">
-    <div class="toolbar"><input type="text" id="fMedia" placeholder="筛选媒体..."></div>
-    <div class="card"><table id="mediaTable">
-      <thead><tr><th>类型</th><th>地址</th><th class="ops">操作</th></tr></thead>
-      <tbody></tbody>
-    </table></div>
-  </section>
-
-  <section class="panel" id="p-text">
-    <pre class="flow" id="textBox">（暂无正文。抓取页面后自动提取可见文本。）</pre>
-  </section>
-
-  <section class="panel" id="p-src">
-    <pre class="flow" id="srcBox">（暂无源码。抓取页面后展示原始 HTML，上限 100KB。）</pre>
-  </section>
-
-  <section class="panel" id="p-export">
-    <div class="card">
-      <p style="color:var(--dim);font-size:13px;margin-bottom:12px">
-        导出本次会话抓取到的全部页面与资源清单（去重合并）。</p>
-      <div style="display:flex;gap:10px;flex-wrap:wrap">
-        <button class="btn" id="expJson">下载清单 JSON</button>
-        <button class="btn" id="expTxt">下载清单 TXT</button>
-      </div>
-    </div>
-  </section>
-
-  <section class="log" id="log"></section>
-
-  <div style="text-align:center;margin:10px 0 0">
-    <a href="/vip.html" style="color:#7ee787;font-size:14px;text-decoration:none;border:1px solid #2ea043;border-radius:6px;padding:6px 14px;display:inline-block" onmouseover="this.style.background='#123d1f'" onmouseout="this.style.background='none'">🎬 VIP 视频在线解析播放 →</a>
-  </div>
   <footer>
-    <button class="btn mini" id="bmBtn" style="vertical-align:middle">📺 视频站专用：获取书签提取工具</button>
-    <span style="opacity:.65">B站/抖音等动态加载、反爬拦截的站点用书签提取，回车粘贴即下载</span>
-    <br>合规提示：本工具仅用于<b>个人学习与技术研究</b>。请仅抓取公开可访问的资源，遵守目标网站 robots.txt、服务条款与版权法律；
-    请勿抓取需登录的私有内容、个人隐私数据，勿用于任何商业或违法用途。批量抓取已内置 400ms 礼貌间隔。
+    抓取通道：CloudBase 云函数代理 → 直连 → 公共CORS代理（自动降级）<br>
+    视频支持 mp4/webm/flv 直链与 m3u8(HLS) 自动合并（含AES-128解密）· 大文件 Range 分块 · 防盗链 Referer 伪装<br>
+    仅限抓取你有权访问的内容 · 强DRM站点(Netflix等)不支持
   </footer>
 </div>
 
+<div class="prog" id="prog"><div class="txt" id="progTxt"></div><div class="bar"><div class="fill" id="progFill"></div></div></div>
+<div class="modal" id="modal"><div class="mbox"><h3 id="mTitle"></h3><pre id="mBody"></pre><div class="mrow"><button class="btn" onclick="closeModal()">关闭</button><button class="btn dl" id="mSave" onclick="saveModal()">💾 保存为文件</button></div></div></div>
+
 <script>
-"use strict";
-/* ================= 配置 ================= */
-// CloudBase 云函数 HTTP 访问地址（部署后回填；为空时自动跳过该通道）
-var TCB_PROXY = "https://chernobyl-sim-d3gaxavw3e2df91ea-1492568300.ap-shanghai.app.tcloudbase.com/fetchpage";
-
-var ENV_ID = "chernobyl-sim-d3gaxavw3e2df91ea";
-var BATCH_LIMIT = 8;
-var BATCH_DELAY = 400;
-
-/* ================= 状态 ================= */
-var store = {
-  pages: [],
-  images: new Map(),
-  links: new Map(),   // key:url val:{url,host,internal,from}
-  scripts: new Map(),
-  styles: new Map(),
-  media: new Map()
-};
-var lastPage = null;      // 最近一次页面信息
-var lastInternal = [];    // 最近一次页面的内链列表
-var busy = false;
-var curTab = "info";
-
-/* ================= 工具 ================= */
-function $(id){ return document.getElementById(id); }
-function esc(s){ return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
-function nowT(){ var d=new Date(); return d.toTimeString().slice(0,8); }
-function fileName(u){ try{ var p=new URL(u).pathname; var s=p.split("/").filter(Boolean).pop()||u.host; return decodeURIComponent(s).slice(0,60);}catch(e){ return u.slice(0,50);} }
-function normalize(raw){
-  var u=(raw||"").trim();
-  if(!u) return "";
-  if(!/^https?:\/\//i.test(u)) u="https://"+u;
-  try{ var o=new URL(u); if(!o.hostname.includes(".")) return ""; return o.href; }catch(e){ return ""; }
-}
-
-function log(tag,msg){
-  var box=$("log");
-  var line=document.createElement("div");
-  line.className="logline";
-  var cls = tag==="OK"?"ok":tag==="WARN"?"warn":tag==="ERR"?"err":"info";
-  line.innerHTML='<span class="t">['+nowT()+']</span> <span class="'+cls+'">'+esc(tag)+'</span> '+esc(msg);
-  box.appendChild(line);
-  while(box.children.length>250) box.removeChild(box.firstChild);
-  box.scrollTop=box.scrollHeight;
-}
-
-function setBusy(on){
-  busy=on;
-  $("busybar").classList.toggle("on",on);
-  $("go").disabled=on;
-}
-
-function toast(msg,isErr){
-  var el=$("stateline");
-  el.innerHTML = isErr ? '<span class="err">'+esc(msg)+'</span>' : esc(msg);
-}
-
-/* ================= 抓取引擎 ================= */
-function withTimeout(ms){
-  var c=new AbortController();
-  var t=setTimeout(function(){ c.abort(); },ms);
-  return {signal:c.signal, cancel:function(){ clearTimeout(t); }};
-}
-
-async function tcbFetch(url,binary){
-  if(!TCB_PROXY) return {ok:false,error:"未配置云函数通道"};
-  var to=withTimeout(30000);
-  try{
-    var u=TCB_PROXY+"?url="+encodeURIComponent(url)+(binary?"&binary=1":"");
-    var r=await fetch(u,{signal:to.signal});
-    var j=await r.json();
-    to.cancel();
-    if(!j.ok) return {ok:false,error:j.error||"HTTP "+j.status};
-    return {ok:true, engine:"CloudBase", status:j.status, contentType:j.contentType,
-            size:j.size, text:j.text, base64:j.base64, finalUrl:j.finalUrl||url};
-  }catch(e){ to.cancel(); return {ok:false,error:e.name==="AbortError"?"超时":e.message}; }
-}
-
-async function plainFetch(url){
-  var to=withTimeout(15000);
-  try{
-    var r=await fetch(url,{signal:to.signal,redirect:"follow"});
-    to.cancel();
-    var text=await r.text();
-    return {ok:r.ok&&text.length>0, engine:"直连", status:r.status,
-            contentType:r.headers.get("content-type")||"", size:text.length, text:text, finalUrl:r.url||url,
-            error:r.ok?undefined:"HTTP "+r.status};
-  }catch(e){ to.cancel(); return {ok:false,error:"CORS或网络不可达"}; }
-}
-
-async function proxyGet(url,prefix,engName,post){
-  var to=withTimeout(20000);
-  try{
-    var r=await fetch(prefix+encodeURIComponent(url),{signal:to.signal});
-    to.cancel();
-    var text=await r.text();
-    if(post) return post(r,text,url);
-    return {ok:r.ok&&text.length>0, engine:engName, status:r.status,
-            contentType:r.headers.get("content-type")||"", size:text.length, text:text, finalUrl:url,
-            error:r.ok?undefined:"HTTP "+r.status};
-  }catch(e){ to.cancel(); return {ok:false,error:e.name==="AbortError"?"超时":e.message}; }
-}
-
-var ENGINES=[
-  {name:"CloudBase 云函数", run:function(u){ return tcbFetch(u,false); }},
-  {name:"浏览器直连",       run:function(u){ return plainFetch(u); }},
-  {name:"公共代理A",        run:function(u){ return proxyGet(u,"https://api.allorigins.win/raw?url=","公共代理A"); }},
-  {name:"公共代理B",        run:function(u){ return proxyGet(u,"https://corsproxy.io/?url=","公共代理B"); }},
-  {name:"公共代理C",        run:function(u){ return proxyGet(u,"https://api.codetabs.com/v1/proxy/?quest=","公共代理C"); }}
+/* ============ 配置 ============ */
+const TCB = 'https://chernobyl-sim-d3gaxavw3e2df91ea-1492568300.ap-shanghai.app.tcloudbase.com/fetchpage';
+const PROXIES = [
+  u => TCB + '?url=' + encodeURIComponent(u),
+  u => 'https://api.allorigins.win/raw?url=' + encodeURIComponent(u),
+  u => 'https://corsproxy.io/?' + encodeURIComponent(u),
+  u => 'https://api.codetabs.com/v1/proxy/?quest=' + encodeURIComponent(u)
 ];
+const CHUNK = 5*1024*1024;
 
-/* ================= 解析 ================= */
-function resolveUrl(base,rel){
-  try{ if(!rel) return null; return new URL(rel,base).href; }catch(e){ return null; }
-}
+/* ============ 日志 ============ */
+const logBox = document.getElementById('log');
+function log(msg, cls){ const d=document.createElement('div'); d.className='l-'+(cls||'dim'); d.textContent='['+new Date().toLocaleTimeString()+'] '+msg; logBox.appendChild(d); logBox.scrollTop=logBox.scrollHeight; }
 
-function parsePage(html,baseUrl,meta){
-  var doc=new DOMParser().parseFromString(html,"text/html");
-  var out={images:[],links:[],scripts:[],styles:[],media:[]};
-  var seen={img:new Set(),lnk:new Set(),js:new Set(),css:new Set(),md:new Set()};
-
-  function addImg(u){ if(!u||seen.img.has(u))return; seen.img.add(u);
-    out.images.push({url:u,name:fileName(u)}); }
-  doc.querySelectorAll("img").forEach(function(el){
-    addImg(resolveUrl(baseUrl,el.getAttribute("src")));
-    addImg(resolveUrl(baseUrl,el.getAttribute("data-src")));
-  });
-  doc.querySelectorAll("source[srcset]").forEach(function(el){
-    var first=(el.getAttribute("srcset")||"").split(",")[0].trim().split(/\s+/)[0];
-    addImg(resolveUrl(baseUrl,first));
-  });
-  doc.querySelectorAll('link[rel*="icon"]').forEach(function(el){
-    addImg(resolveUrl(baseUrl,el.getAttribute("href")));
-  });
-  doc.querySelectorAll('meta[property="og:image"]').forEach(function(el){
-    addImg(resolveUrl(baseUrl,el.getAttribute("content")));
-  });
-
-  var baseHost=""; try{ baseHost=new URL(baseUrl).host; }catch(e){}
-  doc.querySelectorAll("a[href]").forEach(function(el){
-    var u=resolveUrl(baseUrl,el.getAttribute("href"));
-    if(!u||seen.lnk.has(u))return;
-    if(/^(javascript:|mailto:|tel:|data:)/i.test(u))return;
-    seen.lnk.add(u);
-    var internal=false; try{ internal=new URL(u).host===baseHost; }catch(e){}
-    out.links.push({url:u,host:(function(){try{return new URL(u).host}catch(e){return ""}})(),internal:internal});
-  });
-
-  doc.querySelectorAll("script[src]").forEach(function(el){
-    var u=resolveUrl(baseUrl,el.getAttribute("src"));
-    if(u&&!seen.js.has(u)){ seen.js.add(u); out.scripts.push({url:u,type:"JS",name:fileName(u)}); }
-  });
-  doc.querySelectorAll('link[rel="stylesheet"],link[rel="preload"][as="style"]').forEach(function(el){
-    var u=resolveUrl(baseUrl,el.getAttribute("href"));
-    if(u&&!seen.css.has(u)){ seen.css.add(u); out.styles.push({url:u,type:"CSS",name:fileName(u)}); }
-  });
-
-  ["video","audio","iframe","embed"].forEach(function(tag){
-    doc.querySelectorAll(tag+"[src]").forEach(function(el){
-      var u=resolveUrl(baseUrl,el.getAttribute("src"));
-      if(u&&!seen.md.has(u)){ seen.md.add(u); out.media.push({url:u,type:tag.toUpperCase(),name:fileName(u)}); }
+/* ============ 多通道抓取 ============ */
+async function pfetch(url, opt={}){
+  const tries=[];
+  if(!opt.forceProxy){ tries.push(u=>fetch(u,opt.fetchInit||{})); }
+  for(const p of PROXIES){
+    tries.push(async u=>{
+      const h={};
+      if(opt.range) h['Range']=opt.range;
+      if(opt.referer) h['x-referer']=opt.referer;
+      const r=await fetch(p(u),{headers:h});
+      if(!r.ok) throw new Error('HTTP '+r.status);
+      return r;
     });
-  });
-  // <video>/<audio> 的 <source> 子标签（视频站最常用写法）
-  doc.querySelectorAll("video source[src], audio source[src]").forEach(function(el){
-    var u=resolveUrl(baseUrl,el.getAttribute("src"));
-    if(u&&!seen.md.has(u)){ seen.md.add(u); out.media.push({url:u,type:"SOURCE",name:fileName(u)}); }
-  });
-  // 视频封面图
-  doc.querySelectorAll("video[poster]").forEach(function(el){
-    addImg(resolveUrl(baseUrl,el.getAttribute("poster")));
-  });
-  doc.querySelectorAll("object[data]").forEach(function(el){
-    var u=resolveUrl(baseUrl,el.getAttribute("data"));
-    if(u&&!seen.md.has(u)){ seen.md.add(u); out.media.push({url:u,type:"OBJECT",name:fileName(u)}); }
-  });
-  // 正则扫描整页 HTML（含内联脚本）中的音视频直链；扩展名后允许带 ?签名参数（截断会导致防盗链校验失败）
-  var mediaRe=/(https?:)?\/\/[^"'\s\\<>()]+?\.(mp4|webm|ogv|m4v|mov|mkv|flv|ts|m3u8|mp3|wav|m4a|aac|flac|m4s|mpd)(\?[^"'\s\\<>()]*)?/gi;
-  var mm,mediaExt={mp4:"VIDEO",webm:"VIDEO",ogv:"VIDEO",m4v:"VIDEO",mov:"VIDEO",mkv:"VIDEO",flv:"VIDEO",ts:"VIDEO",m3u8:"HLS",mp3:"AUDIO",wav:"AUDIO",m4a:"AUDIO",aac:"AUDIO",flac:"AUDIO",ogg:"AUDIO",m4s:"DASH",mpd:"DASH-MP"};
-  while((mm=mediaRe.exec(html))!==null){
-    var raw=mm[0];
-    if(/^data:/i.test(raw))continue;
-    var u=resolveUrl(baseUrl,raw);
-    if(u&&!seen.md.has(u)){ seen.md.add(u); out.media.push({url:u,type:mediaExt[mm[1].toLowerCase()]||"MEDIA",name:fileName(u)}); }
   }
-  // 深度扫描内联脚本 JSON：视频站（B站/抖音类）把播放地址藏在 baseUrl/playUrl/hls 等字段里，
-  // 很多是无扩展名 CDN 链接，只能靠关键词捕获
-  var kwRe=/"(?:baseUrl|base_url|playUrl|play_url|videoUrl|video_url|hlsUrl|hls_url|hls|flvUrl|flv_url|durl|main_url|master_url|backupUrl|backup_url)"\s*:\s*"((?:https?:)?[^"{}]{10,400})"/gi;
-  while((mm=kwRe.exec(html))!==null){
-    var u2=resolveUrl(baseUrl,mm[1].replace(/\\\//g,"/").replace(/\\u002F/gi,"/"));
-    if(u2&&/^https?:\/\//.test(u2)&&!seen.md.has(u2)){
-      seen.md.add(u2);
-      var extm=/\.(m4s|mp4|m3u8|flv)(\?|$)/i.exec(u2);
-      out.media.push({url:u2,type:extm?(extm[1].toUpperCase()==="M4S"?"DASH":extm[1].toUpperCase()):"SCRIPT",name:fileName(u2)});
-    }
+  let lastErr;
+  for(let i=0;i<tries.length;i++){
+    try{ const r=await tries[i](url); log('通道'+(opt.forceProxy?i+1:i===0?'直连':i)+' 命中','ok'); return r; }
+    catch(e){ lastErr=e; }
   }
+  throw lastErr||new Error('全部通道失败');
+}
+async function ptext(url,opt){ const r=await pfetch(url,opt); return await r.text(); }
+async function pbytes(url,opt){ const r=await pfetch(url,opt); return new Uint8Array(await r.arrayBuffer()); }
 
-  var info={
-    url:baseUrl, fetchedAt:new Date().toLocaleString(),
-    status:meta.status, engine:meta.engine, ms:meta.ms, bytes:meta.size,
-    contentType:meta.contentType,
-    title:(doc.title||"").trim(),
-    desc:(function(){ var m=doc.querySelector('meta[name="description"]'); return m?m.getAttribute("content"):""; })(),
-    keywords:(function(){ var m=doc.querySelector('meta[name="keywords"]'); return m?m.getAttribute("content"):""; })(),
-    charset:(function(){ var m=/charset=["']?([\w-]+)/i.exec(html.slice(0,4096)); return m?m[1].toUpperCase():"-"; })(),
-    textLen:(function(){ var c=doc.body?doc.body.cloneNode(true):null;
-      if(!c)return 0; c.querySelectorAll("script,style,noscript").forEach(function(n){n.remove()});
-      return (c.textContent||"").replace(/\s+/g," ").trim().length; })()
-  };
-  var bodyText="";
-  if(doc.body){
-    var clone=doc.body.cloneNode(true);
-    clone.querySelectorAll("script,style,noscript").forEach(function(n){n.remove()});
-    bodyText=(clone.textContent||"").replace(/\n{3,}/g,"\n\n").replace(/[ \t]+/g," ").trim().slice(0,20000);
+/* ============ 资源模型 ============ */
+let RES=[], curTab='all';
+const EXTMAP={video:['mp4','m3u8','flv','webm','mkv','mov','avi','ts','mpd','m4s'],audio:['mp3','m4a','aac','wav','ogg','flac','opus','wma'],image:['jpg','jpeg','png','gif','webp','bmp','svg','ico','avif'],doc:['pdf','doc','docx','xls','xlsx','ppt','pptx','txt','md','csv','epub','azw3','mobi','json','xml'],archive:['zip','rar','7z','tar','gz'],script:['js','css']};
+function extOf(u){ try{ const p=new URL(u,location.href).pathname; const m=p.match(/\.([a-z0-9]{1,5})$/i); return m?m[1].toLowerCase():''; }catch(e){ return ''; } }
+function typeOf(u){
+  const e=extOf(u); const s=u.toLowerCase();
+  if(/\.m3u8|\.mpd|format=m3u8|type=m3u8/.test(s)) return 'video';
+  for(const [t,arr] of Object.entries(EXTMAP)) if(arr.includes(e)) return t==='archive'?'doc':t;
+  if(/\.(mp4|m3u8|mpd|flv|webm)[?]|video|playurl|playinfo|mediadata|__playinfo__/.test(s)) return 'video';
+  if(/\.(mp3|m4a|aac|wav|ogg|flac)[?]|audio/.test(s)) return 'audio';
+  if(/\.(jpg|jpeg|png|gif|webp)[?]/.test(s)) return 'image';
+  if(/\.(pdf|docx?|xlsx?|pptx?|epub|azw3|mobi)[?]/.test(s)) return 'doc';
+  return 'other';
+}
+function nameOf(u,t){
+  try{ const p=new URL(u,location.href); let n=decodeURIComponent(p.pathname.split('/').pop()||''); if(n&&n.includes('.')) return n.slice(0,60);}catch(e){}
+  return (t||'res')+'_'+Math.abs(hash(u)).toString(36).slice(0,8)+'.'+(guessExt(u,t)||'bin');
+}
+function guessExt(u,t){ const e=extOf(u); if(e) return e; return {video:'mp4',audio:'mp3',image:'jpg',doc:'bin',other:'bin'}[t]||'bin'; }
+function hash(s){ let h=0; for(let i=0;i<s.length;i++){h=((h<<5)-h+s.charCodeAt(i))|0;} return Math.abs(h); }
+
+function addRes(url,type,from){
+  if(!url||url.startsWith('data:')||url.startsWith('blob:')) return;
+  url=url.trim(); if(url.length<8) return;
+  if(!/^https?:\/\//i.test(url)){
+    try{ url=new URL(url, location.href).href; }catch(e){ return; }
   }
-  return {info:info,res:out,text:bodyText,html:html};
+  if(RES.some(r=>r.url===url)) return;
+  if(!type) type=typeOf(url);
+  RES.push({url,type,from:from||'',size:null,name:nameOf(url,type)});
 }
 
-/* ================= 合并与渲染 ================= */
-function merge(parsed){
-  var p=parsed;
-  store.pages.push(p.info);
-  p.res.images.forEach(function(x){ store.images.set(x.url,x); });
-  p.res.links.forEach(function(x){ store.links.set(x.url,x); });
-  p.res.scripts.forEach(function(x){ store.scripts.set(x.url,x); });
-  p.res.styles.forEach(function(x){ store.styles.set(x.url,x); });
-  p.res.media.forEach(function(x){ store.media.set(x.url,x); });
-  lastPage=p.info;
-  lastInternal=p.res.links.filter(function(l){return l.internal}).map(function(l){return l.url});
-  renderCounts();
-  renderInfo(p);
-  renderTable("linkTable",store.links,"links");
-  renderTable("codeTable",codeMap(),"code");
-  renderTable("mediaTable",store.media,"media");
-  renderImgs();
-  $("textBox").textContent=p.text||"（该页面无可提取正文）";
-  $("srcBox").textContent=p.html.slice(0,102400)+(p.html.length>102400?"\n\n... [已截断, 总长 "+p.html.length+"]":"");
+/* ============ 渲染 ============ */
+function render(){
+  const list=document.getElementById('list'), stats=document.getElementById('stats');
+  if(!RES.length){ list.innerHTML='<div class="empty">等待任务 — 输入网址回车开始抓取</div>'; stats.innerHTML=''; return; }
+  const counts={}; RES.forEach(r=>counts[r.type]=(counts[r.type]||0)+1);
+  const TABS=[['all','全部'],['video','视频'],['audio','音频'],['image','图片'],['doc','文档'],['other','链接/其他']];
+  stats.innerHTML=TABS.map(([k,n])=>`<div class="stat ${curTab===k?'on':''}" onclick="curTab='${k}';render()"><b>${k==='all'?RES.length:(counts[k]||0)}</b>${n}</div>`).join('');
+  const show=curTab==='all'?RES:RES.filter(r=>r.type===curTab);
+  if(!show.length){ list.innerHTML='<div class="empty">该分类暂无资源</div>'; return; }
+  RES.forEach((r,idx)=>{ if(!r._id) r._id='r'+idx; });
+  const BN={video:'视频',audio:'音频',image:'图片',doc:'文档',other:'链接',script:'脚本'};
+  list.innerHTML=show.map((r,i)=>`
+    <div class="item">
+      <span class="badge b-${r.type}">${BN[r.type]||r.type.toUpperCase()}</span>
+      <span class="iurl"><a href="${esc(r.url)}" target="_blank" rel="noreferrer">${esc(r.url.length>110?r.url.slice(0,110)+'…':r.url)}</a>${r.from?`<br><span style="color:var(--dim);font-size:10px">来源: ${esc(r.from)}</span>`:''}</span>
+      <span class="isize">${r.size?fmtSize(r.size):''}</span>
+      <span class="ibtns">
+        ${['video','audio','image'].includes(r.type)?`<button class="btn sm" onclick="preview('${r._id}')">▶ 预览</button>`:''}
+        ${r.type==='video'&&/\.m3u8/i.test(r.url)?`<button class="btn sm dl" onclick="dlHLS('${r._id}')">⬇ 合并下载</button>`:''}
+        <button class="btn sm dl" onclick="dlOne('${r._id}')">⬇ 下载</button>
+      </span>
+    </div>`).join('');
 }
+function esc(s){ return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function fmtSize(n){ if(n>1e9) return (n/1e9).toFixed(2)+' GB'; if(n>1e6) return (n/1e6).toFixed(1)+' MB'; if(n>1e3) return (n/1e3).toFixed(0)+' KB'; return n+' B'; }
+function byId(id){ return RES.find(r=>r._id===id); }
+function clearAll(){ RES=[]; render(); log('已清空','dim'); }
+function quick(u){ document.getElementById('url').value=u; crawl(); }
 
-function renderCounts(){
-  $("cPages").textContent=store.pages.length;
-  $("cImg").textContent=store.images.size;
-  $("cLink").textContent=store.links.size;
-  $("cJs").textContent=store.scripts.size;
-  $("cCss").textContent=store.styles.size;
-  $("cMedia").textContent=store.media.size;
-  $("nImg").textContent=store.images.size;
-  $("nLink").textContent=store.links.size;
-  $("nCode").textContent=store.scripts.size+store.styles.size;
-  $("nMedia").textContent=store.media.size;
-}
-
-function codeMap(){
-  var m=new Map();
-  store.scripts.forEach(function(v,k){ m.set(k,v); });
-  store.styles.forEach(function(v,k){ m.set(k,v); });
-  return m;
-}
-
-function renderInfo(p){
-  $("infoEmpty").style.display="none";
-  $("infoCard").className="card";
-  $("infoCard").style.display="block";
-  var i=p.info;
-  var rows=[
-    ["标题",i.title||"-"],["描述",i.desc||"-"],["关键词",i.keywords||"-"],
-    ["地址",i.url],["抓取时间",i.fetchedAt],
-    ["状态",i.status+" · "+i.ms+"ms · 通道:"+i.engine],
-    ["类型",i.contentType||"-"],["编码",i.charset],["大小",fmtSize(i.bytes)],
-    ["正文长度",i.textLen+" 字符"],["图片/链接",p.res.images.length+" / "+p.res.links.length]
-  ];
-  $("infoKv").innerHTML=rows.map(function(r){
-    return "<dt>"+esc(r[0])+"</dt><dd>"+esc(r[1])+"</dd>";
-  }).join("");
-}
-
-function fmtSize(n){
-  if(n==null)return"-";
-  if(n<1024)return n+" B";
-  if(n<1048576)return (n/1024).toFixed(1)+" KB";
-  return (n/1048576).toFixed(2)+" MB";
-}
-
-function filterMap(map,q){
-  if(!q)return map;
-  var out=new Map();
-  map.forEach(function(v,k){ if(k.toLowerCase().includes(q)) out.set(k,v); });
-  return out;
-}
-
-function renderTable(tid,map,kind){
-  var tb=document.querySelector("#"+tid+" tbody");
-  var q=( (kind==="links"?$("fLink"):kind==="code"?$("fCode"):$("fMedia")).value||"").toLowerCase();
-  var m=filterMap(map,q);
-  var rows=[];
-  m.forEach(function(v,k){
-    var tag="";
-    if(kind==="links") tag='<span class="tag '+(v.internal?"in":"ex")+'">'+(v.internal?"内链":"外链")+"</span>";
-    else tag='<span class="tag '+(v.type==="CSS"?"ex":"img")+'">'+esc(v.type||"RES")+"</span>";
-    var host="";
-    try{ host=new URL(k).host; }catch(e){}
-    var ops='<button class="btn mini" onclick="copyTxt(\''+jsq(k)+'\')">复制</button> '+
-      '<button class="btn mini" onclick="openUrl(\''+jsq(k)+'\')">打开</button>';
-    if(kind==="media") ops+=' <button class="btn mini" onclick="smartDl(\''+jsq(k)+'\','+(lastPage?jsq(lastPage.url):'\'\'')+')">下载</button>';
-    rows.push("<tr><td>"+tag+"</td><td class=u><span>"+esc(k)+"</span><span class=host>"+esc(host)+"</span></td>"+
-      '<td class=ops>'+ops+'</td></tr>');
-  });
-  tb.innerHTML=rows.join("")||'<tr><td colspan=3 style="color:var(--dim)">（无匹配项）</td></tr>';
-}
-
-function jsq(s){ return String(s).replace(/\\/g,"\\\\").replace(/'/g,"\\'").replace(/"/g,"&quot;"); }
-function copyTxt(s){
-  if(navigator.clipboard&&navigator.clipboard.writeText){
-    navigator.clipboard.writeText(s).then(function(){toast("已复制到剪贴板");},function(){fallbackCopy(s);});
-  }else fallbackCopy(s);
-}
-function fallbackCopy(s){
-  var ta=document.createElement("textarea");ta.value=s;document.body.appendChild(ta);
-  ta.select();try{document.execCommand("copy");toast("已复制到剪贴板");}catch(e){toast("复制失败",true);}
-  document.body.removeChild(ta);
-}
-function openUrl(u){ window.open(u,"_blank","noopener"); }
-
-function renderImgs(){
-  var box=$("imgsBox");
-  var q=($("fImg").value||"").toLowerCase();
-  var arr=Array.from(filterMap(store.images,q).values());
-  if(!arr.length){ box.innerHTML='<div class="empty">（无图片资源）</div>';return; }
-  box.innerHTML=arr.slice(0,200).map(function(x){
-    return '<div class="icard"><div class="th"><img loading="lazy" referrerpolicy="no-referrer" src="'+esc(x.url)+'" '+
-      'onerror="this.parentElement.textContent=\'缩略图加载失败\'"></div>'+
-      '<div class="meta"><div class="nm" title="'+esc(x.url)+'">'+esc(x.name)+'</div>'+
-      '<div class="ops2"><button class="btn mini" onclick="copyTxt(\''+jsq(x.url)+'\')">复制</button>'+
-      '<button class="btn mini" onclick="openUrl(\''+jsq(x.url)+'\')">打开</button>'+
-      '<button class="btn mini" onclick="smartDl(\''+jsq(x.url)+'\','+(lastPage?jsq(lastPage.url):'\'\'')+')">下载</button></div></div></div>';
-  }).join("")+(arr.length>200?'<div class="empty">仅显示前 200 张，共 '+arr.length+" 张，可用筛选缩小范围</div>":"");
-}
-
-/* 二进制下载（走云函数，失败则新窗口打开） */
-/* ================= 智能下载器：单次直取 / Range分块 / HLS拼接 ================= */
-var dlBusy=false;
-function proxyUrl(u,p){
-  p=p||{};
-  var s=TCB_PROXY+"?url="+encodeURIComponent(u);
-  if(p.head)s+="&head=1";
-  if(p.binary)s+="&binary=1";
-  if(p.raw)s+="&raw=1";
-  if(p.range)s+="&range="+encodeURIComponent(p.range);
-  if(p.referer)s+="&referer="+encodeURIComponent(p.referer);
-  if(p.max)s+="&max="+p.max;
-  if(p.filename)s+="&filename="+encodeURIComponent(p.filename);
-  return s;
-}
-function saveBlob(blob,name){
-  var a=document.createElement("a");
-  a.href=URL.createObjectURL(blob);a.download=name;a.click();
-  setTimeout(function(){URL.revokeObjectURL(a.href)},8000);
-}
-function fmtMB(n){ return (n/1048576).toFixed(1)+"MB"; }
-async function probeHead(u,referer){
-  var to=withTimeout(20000);
+/* ============ 抓取主流程 ============ */
+let BUSY=false;
+async function crawl(){
+  const inp=document.getElementById('url'); let target=inp.value.trim();
+  if(!target) return log('请输入网址','warn');
+  if(!/^https?:\/\//i.test(target)) target='https://'+target;
+  inp.value=target;
+  if(BUSY) return log('正在处理上一任务','warn');
+  BUSY=true; document.getElementById('go').disabled=true;
   try{
-    var r=await fetch(proxyUrl(u,{head:1,referer:referer}),{signal:to.signal});
-    var j=await r.json(); to.cancel();
-    if(!j.ok) throw new Error(j.error||"HTTP "+j.status);
-    return j;
-  }catch(e){ to.cancel(); return null; }
+    log('开始抓取: '+target,'info');
+    const html=await ptext(target);
+    log('抓取成功 '+fmtSize(html.length),'ok');
+    parseHTML(html, target);
+    await deepScan(target);
+    render();
+    log('解析完成，共 '+RES.length+' 项资源','ok');
+  }catch(e){ log('抓取失败: '+e.message,'err'); }
+  BUSY=false; document.getElementById('go').disabled=false;
 }
-async function fetchRaw(u,p){
-  var to=withTimeout(90000);
-  var r=await fetch(proxyUrl(u,p),{signal:to.signal});
-  to.cancel();
-  if(!r.ok) throw new Error("HTTP "+r.status);
-  return await r.arrayBuffer();
+
+function parseHTML(html, base){
+  const doc=new DOMParser().parseFromString(html,'text/html'); let n=0;
+  doc.querySelectorAll('[src]').forEach(el=>{ addRes(el.getAttribute('src'),null,'标签'+el.tagName.toLowerCase()); n++; });
+  doc.querySelectorAll('[href]').forEach(el=>{ const h=el.getAttribute('href'); if(h&&!h.startsWith('#')&&!h.startsWith('javascript:')){ addRes(h,null,'<a/link>'); n++; } });
+  doc.querySelectorAll('source').forEach(el=>addRes(el.getAttribute('src'),null,'<source>'));
+  doc.querySelectorAll('video,audio').forEach(el=>{
+    (el.getAttribute('src')&&addRes(el.getAttribute('src'),null,'<video/audio>'));
+    const p=el.getAttribute('poster'); if(p) addRes(p,'image','poster');
+  });
+  // data-src 懒加载
+  doc.querySelectorAll('[data-src],[data-original],[data-url]').forEach(el=>{
+    const v=el.getAttribute('data-src')||el.getAttribute('data-original')||el.getAttribute('data-url');
+    if(v) addRes(v,null,'懒加载');
+  });
+  // 内联 script 中的 JSON / 直链深扫
+  doc.querySelectorAll('script').forEach(s=>{
+    const t=s.textContent||''; if(t.length<10) return;
+    scanText(t, 'inline-script');
+  });
+  // 全文正则兜底（HTML 内嵌 JSON 常见于 ssr 页面）
+  scanText(html, 'page-text');
+  log('HTML 解析: 提取 '+n+' 个标签资源','dim');
 }
-async function fetchB64(u,p){
-  var to=withTimeout(30000);
-  var r=await fetch(proxyUrl(u,Object.assign({binary:1},p||{})),{signal:to.signal});
-  to.cancel();
-  var j=await r.json();
-  if(!j.ok||!j.base64) throw new Error(j.error||"无数据");
-  var bin=atob(j.base64),u8=new Uint8Array(bin.length);
-  for(var i=0;i<bin.length;i++)u8[i]=bin.charCodeAt(i);
-  return u8;
-}
-async function smartDl(url,referer,name){
-  if(!TCB_PROXY){ openUrl(url); return; }
-  if(dlBusy){ toast("已有下载任务进行中，请稍候",true); return; }
-  if(/\.m3u8(\?|#|$)/i.test(url)){
-    dlBusy=true;
-    try{ await dlHls(url,referer,name); }
-    catch(e){ toast("HLS 下载失败: "+e.message,true); log("ERR","HLS "+url+" · "+e.message); }
-    finally{ dlBusy=false; }
-    return;
-  }
-  dlBusy=true;
+
+/* 深扫：找 __playinfo__ / player JSON / 媒体直链 */
+function scanText(text, from){
   try{
-    name=name||fileName(url);
-    toast("探测文件信息: "+name);
-    var meta=await probeHead(url,referer);
-    var size=meta?meta.contentLength:0;
-    var ct=(meta&&meta.contentType)||"application/octet-stream";
-    if(/\.mp4/i.test(name)&&ct==="application/octet-stream")ct="video/mp4";
-    if(size&&size<=4*1024*1024){
-      toast("下载中: "+name+" ("+fmtMB(size)+")");
-      var buf=await fetchRaw(url,{raw:1,referer:referer,max:6291456,filename:name});
-      saveBlob(new Blob([buf],{type:ct}),name);
-      log("OK","已下载 "+name+" · "+fmtMB(buf.byteLength));
-      toast("已下载: "+name+" · "+fmtMB(buf.byteLength));
-      return;
-    }
-    if(size&&!/bytes/i.test((meta&&meta.acceptRanges)||"")){
-      toast("文件 "+fmtMB(size)+" 且服务器不支持分段，改用新窗口直连下载",true);
-      openUrl(url); return;
-    }
-    if(!size){
-      // HEAD 被拒（部分 CDN 不支持 HEAD），盲分块直到取完
-      var CH2=5*1024*1024,parts2=[],off2=0,t02=Date.now();
-      log("INFO","HEAD 被拒，盲分块下载 "+name);
-      while(true){
-        var b2=await fetchRaw(url,{raw:1,referer:referer,range:"bytes="+off2+"-"+(off2+CH2-1),max:6291456});
-        if(b2.byteLength===0)break;
-        parts2.push(b2); off2+=b2.byteLength;
-        toast("分块下载中 已取 "+fmtMB(off2));
-        if(b2.byteLength<CH2)break;
-      }
-      if(!parts2.length) throw new Error("无数据");
-      saveBlob(new Blob(parts2,{type:ct}),name);
-      log("OK","已下载 "+name+" · "+fmtMB(off2)+" · "+Math.round((Date.now()-t02)/1000)+"s");
-      toast("已下载: "+name+" · "+fmtMB(off2));
-      return;
-    }
-    var CH=5*1024*1024,parts=[],off=0,n=Math.ceil(size/CH),t0=Date.now();
-    log("INFO","大文件分块下载 "+name+" · "+fmtMB(size)+" · "+n+" 块");
-    while(off<size){
-      var end=Math.min(off+CH,size)-1;
-      var buf=await fetchRaw(url,{raw:1,referer:referer,range:"bytes="+off+"-"+end,max:6291456});
-      if(buf.byteLength===0) throw new Error("分块返回空 (offset "+off+")");
-      parts.push(buf); off+=buf.byteLength;
-      toast("分块下载中 "+Math.round(off/size*100)+"% ("+fmtMB(off)+"/"+fmtMB(size)+")");
-    }
-    saveBlob(new Blob(parts,{type:ct}),name);
-    log("OK","已下载 "+name+" · "+fmtMB(size)+" · "+Math.round((Date.now()-t0)/1000)+"s");
-    toast("已下载: "+name+" · "+fmtMB(size));
-  }catch(e){
-    toast("下载失败: "+e.message+"，已尝试新窗口打开",true);
-    log("ERR","下载失败 "+url+" · "+e.message);
-    openUrl(url);
-  }finally{ dlBusy=false; }
-}
-/* ---------- HLS(m3u8) 拼接下载：master选流/分段下载/AES-128解密 ---------- */
-async function dlHls(u,referer,name){
-  toast("获取播放列表: "+(name||fileName(u)));
-  var to=withTimeout(30000);
-  var r=await fetch(proxyUrl(u,{referer:referer}),{signal:to.signal});
-  to.cancel();
-  var j=await r.json();
-  if(!j.ok) throw new Error(j.error||"列表获取失败");
-  var text=j.text||"";
-  if(!/#EXTM3U/.test(text)) throw new Error("不是有效的 m3u8 播放列表");
-  if(/#EXT-X-STREAM-INF/.test(text)){
-    var lines=text.split(/\r?\n/),best=null,bw=0;
-    for(var i=0;i<lines.length;i++){
-      if(/^#EXT-X-STREAM-INF/.test(lines[i])){
-        var m=/BANDWIDTH=(\d+)/.exec(lines[i]);
-        var cur=m?parseInt(m[1],10):0;
-        var nxt=lines[i+1];
-        if(nxt&&nxt.trim()&&!/^#/.test(nxt.trim())&&cur>=bw){ bw=cur; best=resolveUrl(u,nxt.trim()); }
+    // 1) window.__playinfo__ = {...} 等大 JSON
+    const jsonRe=/(?:window\.)?(__playinfo__|__INITIAL_STATE__|__NEXT_DATA__|player_data|__pinia|videoData|playUrl)\s*=\s*(\{[\s\S]{0,200000}?\});/g;
+    let m;
+    while((m=jsonRe.exec(text))!==null){
+      try{
+        const obj=JSON.parse(m[2]);
+        walkJSON(obj, from+':'+m[1]);
+      }catch(e){
+        // JSON 不完整则退回正则扫描该片段
+        scanLinks(m[2], from+':'+m[1]+'(partial)');
       }
     }
-    if(!best) throw new Error("播放列表中未找到子列表");
-    log("INFO","主列表 → 选择 "+Math.round(bw/1024)+"kbps 码率流");
-    return dlHls(best,referer,name);
-  }
-  var lines=text.split(/\r?\n/);
-  var segs=[],key=null,mapUri=null,seq=0;
-  for(var i=0;i<lines.length;i++){
-    var L=lines[i].trim(); if(!L)continue;
-    if(/^#EXT-X-MEDIA-SEQUENCE/.test(L)){ seq=parseInt(L.split(":")[1],10)||0; continue; }
-    if(/^#EXT-X-KEY/.test(L)){
-      var km=/METHOD=([A-Za-z0-9-]+)/.exec(L),ku=/URI="([^"]+)"/.exec(L),ivm=/IV=0[xX]([0-9a-fA-F]+)/.exec(L);
-      if(km&&km[1]!=="NONE"&&ku) key={method:km[1],uri:resolveUrl(u,ku[1]),iv:ivm?ivm[1]:null};
-      continue;
+    // 2) 全文本直链正则
+    scanLinks(text, from);
+  }catch(e){ log('深扫异常 '+e.message,'warn'); }
+}
+function scanLinks(text, from){
+  const re=/https?:\/\/[^\s"'<>\\]+?\.(m3u8|mpd|mp4|flv|webm|mkv|mov|ts|m4s|mp3|m4a|aac|wav|ogg|flac|pdf|docx?|xlsx?|pptx?|epub|zip|rar|7z)(\?[^\s"'<>\\]*)?/gi;
+  let m, c=0;
+  while((m=re.exec(text))!==null){ addRes(m[0],null,from); c++; }
+  if(c) log('正则命中 '+c+' 条直链 ('+from+')','dim');
+}
+function walkJSON(obj, from, depth){
+  if(depth>12||obj===null) return;
+  if(Array.isArray(obj)){ obj.forEach(v=>walkJSON(v,from,(depth||0)+1)); return; }
+  if(typeof obj==='object'){
+    for(const [k,v] of Object.entries(obj)){
+      if(typeof v==='string'){
+        if(/^https?:\/\//.test(v) && /\.(m3u8|mpd|mp4|flv|webm|mp3|m4a|aac|ts|m4s)/i.test(v)){
+          addRes(v,null,from+'.'+k);
+        }
+      } else walkJSON(v,from+'.'+k,(depth||0)+1);
     }
-    if(/^#EXT-X-MAP/.test(L)){
-      var mm2=/URI="([^"]+)"/.exec(L);
-      if(mm2) mapUri=resolveUrl(u,mm2[1]);
-      continue;
-    }
-    if(/^#/.test(L))continue;
-    segs.push(resolveUrl(u,L));
   }
-  if(!segs.length&&!mapUri) throw new Error("列表中没有分段");
-  if(key&&key.method!=="AES-128") throw new Error("不支持的加密方式: "+key.method);
-  var outName=(name||fileName(u)).replace(/\.m3u8(\?.*)?$/i,"")||"video";
-  var allUris=segs.join("");
-  outName+=(mapUri||/\.m4s|\.mp4/i.test(allUris))?"_hls.mp4":"_hls.ts";
-  var cryptoKey=null;
-  if(key){
-    var k8=await fetchB64(key.uri,{referer:referer});
-    cryptoKey=await crypto.subtle.importKey("raw",k8,{name:"AES-CBC"},false,["decrypt"]);
-    if(!key.iv) key.iv=seq;
-  }
-  var all=[],done=0,total=segs.length+(mapUri?1:0);
-  if(mapUri){
-    toast("下载初始化段 1/"+total);
-    all.push(await fetchRaw(mapUri,{raw:1,referer:referer,max:6291456})); done++;
-  }
-  for(var i=0;i<segs.length;i++){
-    toast("HLS 分段 "+(done+1)+"/"+total+" ("+Math.round(done/total*100)+"%)");
-    var ab=await fetchRaw(segs[i],{raw:1,referer:referer,max:6291456});
-    if(cryptoKey){
-      var ivBytes=new Uint8Array(16);
-      if(typeof key.iv==="string"){ for(var k=0;k<16;k++) ivBytes[k]=parseInt(key.iv.substr(k*2,2),16); }
-      else { var v=key.iv; for(var k=15;k>=0;k--){ ivBytes[k]=v&0xff; v=Math.floor(v/256); } }
-      ab=await crypto.subtle.decrypt({name:"AES-CBC",iv:ivBytes},cryptoKey,ab);
-    }
-    all.push(ab); done++;
-  }
-  saveBlob(new Blob(all,{type:outName.endsWith(".mp4")?"video/mp4":"video/mp2t"}),outName);
-  log("OK","已下载 "+outName+" · "+total+" 段拼接完成");
-  toast("已下载: "+outName+" ("+total+" 段)");
 }
 
-/* ================= 主流程 ================= */
-function isMediaUrl(u){
-  return /\.(mp4|webm|ogv|m4v|mov|mkv|flv|m3u8|mp3|wav|m4a|aac|flac|ogg|m4s|mpd)(\?|#|$)/i.test(u||"");
+/* ============ 深度模式：正文/文档提取 ============ */
+async function extractDoc(){
+  const inp=document.getElementById('url'); let target=inp.value.trim();
+  if(!target) return log('请输入网址','warn');
+  if(!/^https?:\/\//i.test(target)) target='https://'+target;
+  log('正文提取模式 (r.jina.ai): '+target,'info');
+  try{
+    const r=await fetch('https://r.jina.ai/'+target);
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    const txt=await r.text();
+    openModal('📄 正文提取 · '+target, txt, nameOf(target,'doc').replace(/\.\w+$/,'')+'_正文.txt');
+    log('正文提取成功 '+fmtSize(txt.length),'ok');
+  }catch(e){ log('正文提取失败: '+e.message,'err'); }
 }
 
-async function crawl(rawUrl){
-  if(busy)return;
-  // 书签助手提取的直链格式：url##ref=来源页面 —— ref 作为防盗链 Referer
-  var refm=/##ref=(.+)$/.exec(rawUrl||"");
-  var pageRef=refm?refm[1].trim():"";
-  if(refm) rawUrl=rawUrl.slice(0,refm.index);
-  var url=normalize(rawUrl);
-  if(!url){ toast("请输入有效的网址（需包含域名，如 example.com）",true);return; }
-  // 媒体直链（.mp4/.m3u8/...）不走页面解析，直接经云函数代理下载
-  if(isMediaUrl(url)){
-    setBusy(true);
-    log("INFO","检测到音视频直链，转云函数代理下载: "+url+(pageRef?" (Referer: "+pageRef+")":""));
-    toast("检测到音视频直链，正在经云函数下载...");
-    try{ await smartDl(url,pageRef); }catch(e){ log("ERR","下载异常: "+e.message); }
-    setBusy(false);
-    return;
-  }
-  setBusy(true);
-  toast("抓取中: "+url);
-  log("INFO","开始抓取 "+url);
-  var res=null,used=null,errs=[];
-  for(var i=0;i<ENGINES.length;i++){
-    var eng=ENGINES[i];
-    log("INFO","尝试通道: "+eng.name);
-    var t0=performance.now();
+/* ============ 下载引擎 ============ */
+function saveBlob(blob, filename){
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob); a.download=filename;
+  document.body.appendChild(a); a.click();
+  setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},4000);
+  log('已保存: '+filename+' ('+fmtSize(blob.size)+')','ok');
+}
+function progShow(txt){ const p=document.getElementById('prog'); p.classList.add('show'); document.getElementById('progTxt').textContent=txt; }
+function progSet(p,txt){ document.getElementById('progFill').style.width=Math.min(100,p*100)+'%'; if(txt)document.getElementById('progTxt').textContent=txt; }
+function progHide(){ document.getElementById('prog').classList.remove('show'); }
+
+async function dlOne(id){
+  const r=byId(id); if(!r) return;
+  const url=r.url;
+  try{
+    if(/\.m3u8/i.test(url)) return dlHLS(id);
+    log('下载: '+url,'info');
+    progShow('探测文件信息…');
+    // HEAD 探测
+    let size=0, acceptsRange=false;
     try{
-      var r=await eng.run(url);
-      if(r&&r.ok&&typeof r.text==="string"&&r.text.length>0){
-        r.ms=Math.round(performance.now()-t0);
-        res=r;used=eng.name;break;
-      }
-      errs.push(eng.name+": "+((r&&r.error)||"空响应"));
-      log("WARN",eng.name+" 未成功: "+((r&&r.error)||"空响应"));
-    }catch(e){
-      errs.push(eng.name+": "+e.message);
-      log("WARN",eng.name+" 异常: "+e.message);
+      const hr=await pfetch(url,{fetchInit:{method:'HEAD'}, forceProxy:true});
+      size=+hr.headers.get('content-length')||0;
+      acceptsRange=(hr.headers.get('accept-ranges')||'').includes('bytes');
+    }catch(e){}
+    r.size=size; render();
+    if(size && size<=CHUNK || !acceptsRange){
+      // 单次下载
+      progSet(0.05,'单次下载 '+fmtSize(size||0));
+      const rr=await pfetch(url,{forceProxy:!!size&&size>CHUNK});
+      const blob=await rr.blob();
+      progSet(1,'完成');
+      saveBlob(blob, r.name);
+    } else {
+      await chunkedDL(url, r);
     }
+  }catch(e){ log('下载失败: '+e.message,'err'); }
+  progHide();
+}
+
+async function chunkedDL(url, res, prefix){
+  const parts=[];
+  progSet(0,'分块下载 0/'+Math.ceil((res.size||0)/CHUNK));
+  for(let off=0; off<res.size; off+=CHUNK){
+    const end=Math.min(off+CHUNK, res.size)-1;
+    const rr=await pfetch(url,{forceProxy:true, range:'bytes='+off+'-'+end});
+    parts.push(await rr.arrayBuffer());
+    progSet((off+CHUNK)/res.size,'分块下载 '+Math.round((off+CHUNK)/CHUNK)+'/'+Math.ceil(res.size/CHUNK)+' · '+fmtSize(Math.min(off+CHUNK,res.size))+'/'+fmtSize(res.size));
   }
-  if(!res){
-    log("ERR","全部通道失败: "+url);
-    var pInf=$("p-info");
-    if(curTab!=="info") switchTab("info");
-    $("infoEmpty").style.display="none";
-    $("infoCard").style.display="block";
-    $("infoCard").className="card errcard";
-    $("infoKv").innerHTML="<dt>结果</dt><dd>全部通道均失败</dd><dt>地址</dt><dd>"+esc(url)+"</dd>"+
-      "<dt>详情</dt><dd>"+errs.map(esc).join("<br>")+"</dd>";
-    toast("抓取失败：所有通道均无法获取该页面",true);
-    setBusy(false);
-    return;
-  }
-  log("OK","通道 ["+used+"] 成功 · HTTP "+res.status+" · "+fmtSize(res.size)+" · "+res.ms+"ms");
-  var parsed=parsePage(res.text,res.finalUrl||url,{status:res.status,engine:used,ms:res.ms,size:res.size,contentType:res.contentType});
-  merge(parsed);
-  toast("抓取成功（通道:"+used+"）· 图片 "+parsed.res.images.length+" · 链接 "+parsed.res.links.length+
-        " · 脚本/样式 "+(parsed.res.scripts.length+parsed.res.styles.length));
-  setBusy(false);
+  saveBlob(new Blob(parts,{type:'application/octet-stream'}), (prefix||'')+res.name);
 }
 
-async function batchCrawl(){
-  if(busy)return;
-  if(!lastInternal.length){ toast("请先抓取一个页面，再批量抓取其内链",true);return; }
-  var urls=lastInternal.slice(0,BATCH_LIMIT);
-  toast("批量抓取 "+urls.length+" 个内链...");
-  for(var i=0;i<urls.length;i++){
-    log("INFO","[批量 "+(i+1)+"/"+urls.length+"] "+urls[i]);
-    await crawl(urls[i]);
-    if(i<urls.length-1) await new Promise(function(r){setTimeout(r,BATCH_DELAY)});
-  }
-  toast("批量抓取完成 · 已爬页面共 "+store.pages.length);
+/* ============ HLS m3u8 合并下载 ============ */
+async function dlHLS(id){
+  const r=byId(id); if(!r) return;
+  try{
+    log('HLS 解析: '+r.url,'info');
+    progShow('解析 m3u8…');
+    let text=await ptext(r.url);
+    // 多级索引：找最高码率子 playlist
+    let lvl=0;
+    while(/#EXT-X-STREAM-INF/i.test(text) && lvl<3){
+      const lines=text.split(/\r?\n/);
+      let best=null,bestBw=0;
+      for(let i=0;i<lines.length;i++){
+        if(lines[i].startsWith('#EXT-X-STREAM-INF')){
+          const bw=+((lines[i].match(/BANDWIDTH=(\d+)/)||[])[1]||0);
+          const uri=lines[i+1]; if(uri&&!uri.startsWith('#')&&bw>=bestBw){bestBw=bw;best=uri.trim();}
+        }
+      }
+      if(!best) break;
+      const sub=new URL(best, r.url).href;
+      log('多级索引 → '+sub,'dim');
+      text=await ptext(sub); lvl++;
+    }
+    // 解析 key + segments
+    let encKey=null, ivHex=null, seq=0;
+    const segs=[];
+    for(const line of text.split(/\r?\n/)){
+      if(line.startsWith('#EXT-X-MEDIA-SEQUENCE')) seq=+line.split(':')[1]||0;
+      if(line.startsWith('#EXT-X-KEY')){
+        const method=(line.match(/METHOD=([^,]+)/)||[])[1];
+        if(method&&method!=='NONE'){
+          const ku=(line.match(/URI="([^"]+)"/)||[])[1];
+          ivHex=(line.match(/IV=0[xX]([0-9a-fA-F]+)/)||[])[1];
+          if(ku){ const kurl=new URL(ku, r.url).href; encKey=await pbytes(kurl); log('AES-128 密钥已获取','ok'); }
+        }
+      }
+      if(line&&!line.startsWith('#')) segs.push(new URL(line, r.url).href);
+    }
+    if(!segs.length) throw new Error('未找到媒体分段');
+    log('共 '+segs.length+' 段'+(encKey?' (AES-128 加密)':''),'dim');
+    progSet(0,'下载分段 0/'+segs.length);
+    const key=encKey?await crypto.subtle.importKey('raw',encKey,'AES-CBC',false,['decrypt']):null;
+    const chunks=[]; let done=0; const total=segs.length;
+    const CONC=4; let idx=0;
+    async function worker(){
+      while(idx<total){
+        const my=idx++;
+        let data=await pbytes(segs[my]);
+        if(key){
+          let iv;
+          if(ivHex){ iv=new Uint8Array(ivHex.match(/.{2}/g).map(h=>parseInt(h,16))); }
+          else{ iv=new Uint8Array(16); const dv=new DataView(iv.buffer); dv.setUint32(8, seq+my); }
+          data=new Uint8Array(await crypto.subtle.decrypt({name:'AES-CBC',iv}, key, data));
+        }
+        chunks[my]=data; done++;
+        if(done%5===0||done===total) progSet(done/total,'下载分段 '+done+'/'+total+' · '+fmtSize(chunks.reduce((s,c)=>s+(c?c.length:0),0)));
+      }
+    }
+    await Promise.all(Array.from({length:CONC},worker));
+    const blob=new Blob(chunks,{type:'video/mp2t'});
+    saveBlob(blob, r.name.replace(/\.\w+$/,'')+'.ts');
+  }catch(e){ log('HLS 失败: '+e.message,'err'); }
+  progHide();
 }
 
-/* ================= 导出 ================= */
-function dlBlob(name,content,type){
-  var blob=new Blob([content],{type:type});
-  var a=document.createElement("a");
-  a.href=URL.createObjectURL(blob);a.download=name;a.click();
-  setTimeout(function(){URL.revokeObjectURL(a.href)},4000);
+/* ============ 预览 ============ */
+async function preview(id){
+  const r=byId(id); if(!r) return;
+  openModal((r.type==='video'?'▶ 视频预览 · ':'🎵 音频预览 · ')+r.name,
+    '<video controls autoplay style="width:100%;max-height:60vh" src="'+esc(r.url)+'"></video>', null);
+  document.getElementById('mSave').style.display='none';
 }
-function exportJson(){
-  var data={exportedAt:new Date().toISOString(),pages:store.pages,
-    images:Array.from(store.images.keys()),
-    links:Array.from(store.links.values()),
-    scripts:Array.from(store.scripts.keys()),
-    styles:Array.from(store.styles.keys()),
-    media:Array.from(store.media.keys())};
-  dlBlob("crawler-export-"+Date.now()+".json",JSON.stringify(data,null,2),"application/json");
-  log("OK","已导出 JSON 清单");
+function openModal(title, body, saveName){
+  document.getElementById('mTitle').textContent=title;
+  document.getElementById('mBody').innerHTML=body;
+  const sb=document.getElementById('mSave');
+  if(saveName){ sb.style.display=''; sb.dataset.name=saveName; sb.dataset.body=body; }
+  else sb.style.display='none';
+  document.getElementById('modal').classList.add('show');
 }
-function exportTxt(){
-  var L=[];
-  L.push("SUPER CRAWLER 导出 · "+new Date().toLocaleString());
-  L.push("已爬页面: "+store.pages.length);
-  store.pages.forEach(function(p){L.push("  [页] "+p.url)});
-  L.push("");
-  L.push("图片("+store.images.size+"):");
-  Array.from(store.images.keys()).forEach(function(u){L.push("  "+u)});
-  L.push("");
-  L.push("链接("+store.links.size+"):");
-  Array.from(store.links.values()).forEach(function(l){L.push("  ["+(l.internal?"内":"外")+"] "+l.url)});
-  L.push("");
-  L.push("脚本("+store.scripts.size+"):");
-  Array.from(store.scripts.keys()).forEach(function(u){L.push("  "+u)});
-  L.push("");
-  L.push("样式("+store.styles.size+"):");
-  Array.from(store.styles.keys()).forEach(function(u){L.push("  "+u)});
-  L.push("");
-  L.push("媒体("+store.media.size+"):");
-  Array.from(store.media.keys()).forEach(function(u){L.push("  "+u)});
-  dlBlob("crawler-export-"+Date.now()+".txt",L.join("\n"),"text/plain;charset=utf-8");
-  log("OK","已导出 TXT 清单");
-}
+function saveModal(){ const sb=document.getElementById('mSave'); saveBlob(new Blob([sb.dataset.body],{type:'text/plain'}), sb.dataset.name); }
+function closeModal(){ document.getElementById('modal').classList.remove('show'); }
 
-/* ================= 事件绑定 ================= */
-function switchTab(p){
-  curTab=p;
-  document.querySelectorAll(".tab").forEach(function(t){
-    t.classList.toggle("on",t.getAttribute("data-p")===p);
-  });
-  document.querySelectorAll(".panel").forEach(function(el){
-    el.classList.toggle("on",el.id==="p-"+p);
-  });
-}
-document.querySelectorAll(".tab").forEach(function(t){
-  t.addEventListener("click",function(){ switchTab(t.getAttribute("data-p")); });
-});
-$("go").addEventListener("click",function(){ crawl($("url").value); });
-$("url").addEventListener("keydown",function(e){ if(e.key==="Enter")crawl($("url").value); });
-$("clear").addEventListener("click",function(){
-  store.pages=[];store.images.clear();store.links.clear();
-  store.scripts.clear();store.styles.clear();store.media.clear();
-  lastPage=null;lastInternal=[];
-  $("infoCard").style.display="none";$("infoCard").className="card";
-  $("infoEmpty").style.display="block";
-  $("linkTable").querySelector("tbody").innerHTML="";
-  $("codeTable").querySelector("tbody").innerHTML="";
-  $("mediaTable").querySelector("tbody").innerHTML="";
-  $("imgsBox").innerHTML="";
-  $("textBox").textContent="（暂无正文。抓取页面后自动提取可见文本。）";
-  $("srcBox").textContent="（暂无源码。抓取页面后展示原始 HTML，上限 100KB。）";
-  renderCounts();toast("已清空全部结果");log("INFO","已清空结果");
-});
-$("btnBatch").addEventListener("click",batchCrawl);
-$("expJson").addEventListener("click",exportJson);
-$("expTxt").addEventListener("click",exportTxt);
-$("fImg").addEventListener("input",renderImgs);
-$("fLink").addEventListener("input",function(){renderTable("linkTable",store.links,"links")});
-$("fCode").addEventListener("input",function(){renderTable("codeTable",codeMap(),"code")});
-$("fMedia").addEventListener("input",function(){renderTable("mediaTable",store.media,"media")});
-
-/* 初始化 */
-(function(){
-  if(TCB_PROXY){
-    log("OK","云函数通道已配置: "+TCB_PROXY.replace(/\?.*$/,"?..."));
-  }else{
-    log("WARN","云函数通道未配置，将使用直连与公共代理");
-  }
-  log("INFO","SUPER CRAWLER 就绪 · 引擎链: 云函数 > 直连 > 公共代理A/B/C");
-
-  /* ================= 书签提取助手：B站/抖音等动态加载+反爬站点专用 =================
-     原理：书签代码运行在用户自己打开的视频页面（同源），可读取 window.__playinfo__ 等渲染后数据，
-     提取真实视频直链并拼上 ##ref=来源页（防盗链 Referer），复制后回到爬虫粘贴即下载。 */
-  var BM_CODE = "javascript:(function(){var%20urls=[],p=window.__playinfo__;if(p&&p.data)p=p.data;"
-    + "if(p&&p.dash){(p.dash.video||[]).slice(0,3).forEach(function(v){v.baseUrl&&urls.push(v.baseUrl)});"
-    + "(p.dash.audio||[]).slice(0,2).forEach(function(a){a.baseUrl&&urls.push(a.baseUrl)})}"
-    + "if(p&&p.durl)p.durl.forEach(function(d){(d.url||(d.backup_url&&d.backup_url[0]))&&urls.push(d.url||(d.backup_url&&d.backup_url[0]))});"
-    + "if(p&&p.url)urls.push(p.url);"
-    + "document.querySelectorAll('video[src],video source[src],audio[src]').forEach(function(el){el.src&&urls.push(el.src)});"
-    + "document.querySelectorAll('iframe[src]').forEach(function(el){/(embed|player)/i.test(el.src)&&urls.push(el.src)});"
-    + "urls=urls.filter(Boolean).filter(function(u,i,a){return a.indexOf(u)===i});"
-    + "if(!urls.length){alert('未发现视频直链');return}"
-    + "var%20out=urls[0]+'##ref='+location.href;"
-    + "(navigator.clipboard?navigator.clipboard.writeText(out):Promise.reject())"
-    + ".then(function(){alert('已复制最佳画质视频地址（共发现'+urls.length+'个）\\n\\n回到超级爬虫页面，粘贴到输入框回车即下载')},"
-    + "function(){prompt('视频地址（复制全部或第一行）：',out)})})()";
-  var bmBtn=document.getElementById("bmBtn");
-  if(bmBtn)bmBtn.addEventListener("click",function(){
-    var done=function(){
-      toast("书签代码已复制！3 步使用：① 浏览器书签栏右键→添加书签，网址栏粘贴刚才的代码 ② 打开视频页面，点这个书签 ③ 回到本页粘贴下载");
-      log("OK","书签提取代码已复制到剪贴板");
-    };
-    if(navigator.clipboard&&navigator.clipboard.writeText){
-      navigator.clipboard.writeText(BM_CODE).then(done,function(){prompt("复制下面整行代码作为书签网址：",BM_CODE)});
-    }else{ prompt("复制下面整行代码作为书签网址：",BM_CODE); }
-  });
-})();
+/* ============ 事件 ============ */
+document.getElementById('url').addEventListener('keydown',e=>{ if(e.key==='Enter') crawl(); });
+log('SUPER CRAWLER X 就绪 · 云函数通道: '+ (TCB.includes('tcloudbase')?'已配置':'未配置') ,'ok');
 </script>
 </body>
 </html>
