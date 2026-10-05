@@ -90,9 +90,9 @@ footer{margin-top:26px;color:var(--dim);font-size:11px;text-align:center;line-he
     <button class="btn" onclick="clearAll()">清空</button>
   </div>
   <div class="quick">
-    <span class="chip" onclick="quick('https://www.bilibili.com')">示例: B站视频页</span>
-    <span class="chip" onclick="quick('https://v.qq.com')">示例: 腾讯视频</span>
-    <span class="chip" onclick="document.getElementById('url').focus()">提示: 回车抓取 · 资源点下载即存本地</span>
+    <span class="chip" onclick="quick('https://www.bilibili.com')">示例: B站主站</span>
+    <span class="chip" style="color:var(--warn);border-color:var(--warn)" onclick="biliHelper()">📌 B站视频专用通道（风控绕行）</span>
+    <span class="chip" onclick="document.getElementById('url').focus()">提示: 粘贴 直链##ref=来源页 可直接下载</span>
   </div>
 
   <div class="stats" id="stats"></div>
@@ -185,7 +185,7 @@ function nameOf(u,t){
 function guessExt(u,t){ const e=extOf(u); if(e) return e; return {video:'mp4',audio:'mp3',image:'jpg',doc:'bin',other:'bin'}[t]||'bin'; }
 function hash(s){ let h=0; for(let i=0;i<s.length;i++){h=((h<<5)-h+s.charCodeAt(i))|0;} return Math.abs(h); }
 
-function addRes(url,type,from){
+function addRes(url,type,from,referer){
   if(!url||url.startsWith('data:')||url.startsWith('blob:')) return;
   url=url.trim(); if(url.length<8) return;
   if(!/^https?:\/\//i.test(url)){
@@ -193,7 +193,7 @@ function addRes(url,type,from){
   }
   if(RES.some(r=>r.url===url)) return;
   if(!type) type=typeOf(url);
-  RES.push({url,type,from:from||'',size:null,name:nameOf(url,type)});
+  RES.push({url,type,from:from||'',size:null,name:nameOf(url,type),referer:referer||''});
 }
 
 /* ============ 渲染 ============ */
@@ -455,8 +455,47 @@ function openModal(title, body, saveName){
 function saveModal(){ const sb=document.getElementById('mSave'); saveBlob(new Blob([sb.dataset.body],{type:'text/plain'}), sb.dataset.name); }
 function closeModal(){ document.getElementById('modal').classList.remove('show'); }
 
+/* ============ B站专用：书签提取 + 直链下载 ============ */
+const BILI_BOOKMARKLET = "javascript:(function(){var pi=window.__playinfo__;if(!pi||!pi.data||!pi.data.dash){alert('未找到播放数据，请先播放视频再点');return;}var d=pi.data.dash;var v=(d.video||[]).slice().sort(function(a,b){return(b.bandwidth||0)-(a.bandwidth||0)})[0];var a=(d.audio||[]).slice().sort(function(a,b){return(b.bandwidth||0)-(a.bandwidth||0)})[0];var out=v.baseUrl+(a?'##ref='+encodeURIComponent(location.href)+'##audio='+encodeURIComponent(a.baseUrl):'##ref='+encodeURIComponent(location.href));var w=window.open('https://allen-00102.github.io/chernobyl-simulator/?direct='+encodeURIComponent(out),'_blank');if(!w){prompt('弹窗被拦截，请手动复制：',out);}})()";
+function biliHelper(){
+  openModal('📌 B站视频下载 · 三步搞定（绕过风控）',
+    '<div style="font-size:13px;line-height:2">'+
+    '<b style="color:var(--warn)">第一步</b>：复制下面整段代码 → 浏览器书签栏右键 →「添加网页/新书签」→ 名称随意（如「B站提取」），网址栏粘贴这段代码<br>'+
+    '<b style="color:var(--warn)">第二步</b>：打开任意 B站视频播放页（等视频开始播放）→ 点书签栏里的「B站提取」<br>'+
+    '<b style="color:var(--warn)">第三步</b>：会自动跳回本页并列出视频/音频直链 → 分别点 ⬇ 下载<br>'+
+    '<span style="color:var(--dim)">合并：下载的 video.m4s + audio.m4s 可用 ffmpeg 合并：<br>ffmpeg -i video.m4s -i audio.m4s -c copy output.mp4</span>'+
+    '</div><textarea id="bkCode" style="width:100%;height:90px;margin-top:10px;background:#05080c;color:var(--acc);border:1px solid var(--line2);border-radius:4px;padding:8px;font-family:var(--mono);font-size:11px" readonly>'+esc(BILI_BOOKMARKLET)+'</textarea>', null);
+  document.getElementById('mSave').style.display='none';
+}
+function dlDirect(rawStr){
+  rawStr=rawStr.trim();
+  let ref='';
+  const m=rawStr.match(/^(.+?)##ref=([^#]+)(?:##audio=(.+))?$/);
+  if(m){ rawStr=m[1]; ref=decodeURIComponent(m[2]);
+    if(m[3]) addRes(decodeURIComponent(m[3]),'audio','B站书签',ref);
+  }
+  addRes(rawStr,'video','B站书签',ref);
+  render();
+  const vr=RES[RES.length-1];
+  log('识别为直链，开始下载（Referer: '+(ref||'无')+'）','info');
+  dlOne(vr._id);
+}
+/* URL 参数自动处理：?direct=<enc直链[##ref=...]> */
+(function(){
+  const q=new URLSearchParams(location.search);
+  const d=q.get('direct');
+  if(d){
+    history.replaceState(null,'',location.pathname);
+    setTimeout(()=>{ dlDirect(d); },600);
+  }
+})();
+
 /* ============ 事件 ============ */
-document.getElementById('url').addEventListener('keydown',e=>{ if(e.key==='Enter') crawl(); });
+document.getElementById('url').addEventListener('keydown',e=>{ if(e.key==='Enter'){
+  const v=document.getElementById('url').value.trim();
+  if(/##ref=/.test(v)) return dlDirect(v);
+  crawl();
+}});
 log('SUPER CRAWLER X 就绪 · 云函数通道: '+ (TCB.includes('tcloudbase')?'已配置':'未配置') ,'ok');
 </script>
 </body>
