@@ -101,7 +101,7 @@ footer{margin-top:26px;color:var(--dim);font-size:11px;text-align:center;line-he
   <div id="log"></div>
 
   <footer>
-    抓取通道：CloudBase 云函数代理 → 直连 → 公共CORS代理（自动降级）<br>
+    抓取通道：CloudBase 云函数(raw) → Cloudflare Worker(自建) → 直连 → 公共代理（自动降级）<br>
     视频支持 mp4/webm/flv 直链与 m3u8(HLS) 自动合并（含AES-128解密）· 大文件 Range 分块 · 防盗链 Referer 伪装<br>
     仅限抓取你有权访问的内容 · 强DRM站点(Netflix等)不支持
   </footer>
@@ -113,10 +113,11 @@ footer{margin-top:26px;color:var(--dim);font-size:11px;text-align:center;line-he
 <script>
 /* ============ 配置 ============ */
 const TCB = 'https://chernobyl-sim-d3gaxavw3e2df91ea-1492568300.ap-shanghai.app.tcloudbase.com/fetchpage';
+const CF_W = 'https://scx-proxy.allen00102.workers.dev';
 const PROXIES = [
-  u => TCB + '?url=' + encodeURIComponent(u),
+  u => TCB + '?url=' + encodeURIComponent(u) + '&raw=1',
+  u => CF_W + '/?url=' + encodeURIComponent(u),
   u => 'https://api.allorigins.win/raw?url=' + encodeURIComponent(u),
-  u => 'https://corsproxy.io/?' + encodeURIComponent(u),
   u => 'https://api.codetabs.com/v1/proxy/?quest=' + encodeURIComponent(u)
 ];
 const CHUNK = 5*1024*1024;
@@ -128,23 +129,37 @@ function log(msg, cls){ const d=document.createElement('div'); d.className='l-'+
 /* ============ 多通道抓取 ============ */
 async function pfetch(url, opt={}){
   const tries=[];
-  if(!opt.forceProxy){ tries.push(u=>fetch(u,opt.fetchInit||{})); }
-  for(const p of PROXIES){
-    tries.push(async u=>{
-      const h={};
-      if(opt.range) h['Range']=opt.range;
-      if(opt.referer) h['x-referer']=opt.referer;
-      const r=await fetch(p(u),{headers:h});
-      if(!r.ok) throw new Error('HTTP '+r.status);
-      return r;
-    });
-  }
+  const mk=(label,build)=>async u=>{
+    const h={};
+    if(opt.range) h['Range']=opt.range;
+    if(opt.referer) h['x-referer']=opt.referer;
+    const r=await fetch(build(u),{headers:h});
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    return r;
+  };
+  // 通道1: 云函数(raw=1 原始内容) 通道2: 自建CF Worker 通道3+: 公共代理兜底
+  tries.push(mk('TCB', u=>TCB+'?url='+encodeURIComponent(u)+'&raw=1'+(opt.referer?'&referer='+encodeURIComponent(opt.referer):'')));
+  tries.push(mk('CFW', u=>CF_W+'/?url='+encodeURIComponent(u)));
+  for(const p of PROXIES.slice(2)) tries.push(mk('PUB', p));
+  if(!opt.forceProxy) tries.unshift(u=>fetch(u,opt.fetchInit||{}));
   let lastErr;
   for(let i=0;i<tries.length;i++){
-    try{ const r=await tries[i](url); log('通道'+(opt.forceProxy?i+1:i===0?'直连':i)+' 命中','ok'); return r; }
+    try{ const r=await tries[i](url); log('通道['+(i===0&&!opt.forceProxy?'直连':i)+'] 命中','ok'); return r; }
     catch(e){ lastErr=e; }
   }
   throw lastErr||new Error('全部通道失败');
+}
+async function probeSize(url){
+  try{
+    const r=await fetch(TCB+'?url='+encodeURIComponent(url)+'&head=1&raw=1');
+    const j=await r.json();
+    if(j.ok) return {size:+j.contentLength||0, ranges:(j.acceptRanges||'').includes('bytes'), type:j.contentType||''};
+  }catch(e){}
+  try{
+    const r=await fetch(CF_W+'/?url='+encodeURIComponent(url),{method:'HEAD'});
+    return {size:+r.headers.get('content-length')||0, ranges:(r.headers.get('accept-ranges')||'').includes('bytes'), type:r.headers.get('content-type')||''};
+  }catch(e){}
+  return {size:0, ranges:false, type:''};
 }
 async function ptext(url,opt){ const r=await pfetch(url,opt); return await r.text(); }
 async function pbytes(url,opt){ const r=await pfetch(url,opt); return new Uint8Array(await r.arrayBuffer()); }
@@ -328,18 +343,13 @@ async function dlOne(id){
     if(/\.m3u8/i.test(url)) return dlHLS(id);
     log('下载: '+url,'info');
     progShow('探测文件信息…');
-    // HEAD 探测
-    let size=0, acceptsRange=false;
-    try{
-      const hr=await pfetch(url,{fetchInit:{method:'HEAD'}, forceProxy:true});
-      size=+hr.headers.get('content-length')||0;
-      acceptsRange=(hr.headers.get('accept-ranges')||'').includes('bytes');
-    }catch(e){}
+    // 探测文件信息（云函数 head 模式 / Worker HEAD）
+    const info=await probeSize(url);
+    const size=info.size, acceptsRange=info.ranges;
     r.size=size; render();
     if(size && size<=CHUNK || !acceptsRange){
-      // 单次下载
       progSet(0.05,'单次下载 '+fmtSize(size||0));
-      const rr=await pfetch(url,{forceProxy:!!size&&size>CHUNK});
+      const rr=await pfetch(url,{});
       const blob=await rr.blob();
       progSet(1,'完成');
       saveBlob(blob, r.name);
@@ -355,7 +365,7 @@ async function chunkedDL(url, res, prefix){
   progSet(0,'分块下载 0/'+Math.ceil((res.size||0)/CHUNK));
   for(let off=0; off<res.size; off+=CHUNK){
     const end=Math.min(off+CHUNK, res.size)-1;
-    const rr=await pfetch(url,{forceProxy:true, range:'bytes='+off+'-'+end});
+    const rr=await pfetch(url,{forceProxy:true, range:'bytes='+off+'-'+end, referer:res.referer||''});
     parts.push(await rr.arrayBuffer());
     progSet((off+CHUNK)/res.size,'分块下载 '+Math.round((off+CHUNK)/CHUNK)+'/'+Math.ceil(res.size/CHUNK)+' · '+fmtSize(Math.min(off+CHUNK,res.size))+'/'+fmtSize(res.size));
   }
