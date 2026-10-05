@@ -1,0 +1,1365 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>切尔诺贝利：4号机组控制室</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{
+  background:#0a0a0a;
+  color:#e0e0e0;
+  font-family:'Courier New','Consolas',monospace;
+  min-height:100vh;
+  overflow-x:hidden;
+  user-select:none;
+}
+.game-container{max-width:1400px;margin:0 auto;padding:8px;}
+
+.header{
+  background:linear-gradient(180deg,#1a1a2e,#0a0a0a);
+  border:2px solid #444;border-radius:6px;
+  padding:10px 16px;margin-bottom:6px;
+  display:flex;justify-content:space-between;align-items:center;
+}
+.header h1{
+  color:#f0f0f0;font-size:22px;letter-spacing:4px;
+  text-shadow:0 0 12px rgba(200,200,200,0.3);
+}
+.header .sub{color:#888;font-size:13px;margin-top:2px;}
+.clock-panel{
+  background:#151515;border:2px solid #444;
+  padding:6px 16px;border-radius:4px;text-align:center;
+}
+.clock-panel .time{
+  color:#ff4444;font-size:28px;font-weight:bold;letter-spacing:3px;
+}
+.clock-panel .date{color:#888;font-size:12px;}
+
+.volume-control{
+  display:flex;
+  align-items:center;
+  gap:6px;
+  background:#111;
+  border:1px solid #333;
+  border-radius:4px;
+  padding:4px 10px;
+}
+.volume-control .vol-icon{
+  color:#666;
+  font-size:13px;
+  cursor:pointer;
+  transition:color 0.2s;
+}
+.volume-control .vol-icon:hover{color:#aaa;}
+.volume-slider{
+  -webkit-appearance:none;
+  appearance:none;
+  width:70px;
+  height:4px;
+  background:#222;
+  border-radius:2px;
+  outline:none;
+  cursor:pointer;
+}
+.volume-slider::-webkit-slider-thumb{
+  -webkit-appearance:none;
+  appearance:none;
+  width:12px;
+  height:12px;
+  border-radius:50%;
+  background:#44cc44;
+  cursor:pointer;
+  border:2px solid #222;
+}
+.volume-slider::-moz-range-thumb{
+  width:12px;
+  height:12px;
+  border-radius:50%;
+  background:#44cc44;
+  cursor:pointer;
+  border:2px solid #222;
+}
+.volume-label{
+  color:#555;
+  font-size:10px;
+  min-width:28px;
+  text-align:right;
+}
+
+.alarm-bar{
+  background:#1a0000;border:2px solid #440000;
+  padding:8px 14px;margin-bottom:6px;
+  display:flex;align-items:center;gap:10px;min-height:40px;
+  font-size:16px;border-radius:4px;
+}
+.alarm-bar.active{background:#2a0000;border-color:#880000;animation:alarmPulse 1s infinite;}
+@keyframes alarmPulse{0%,100%{background:#2a0000}50%{background:#3a0000}}
+.alarm-icon{font-size:22px;color:#ff2222;display:none;}
+.alarm-bar.active .alarm-icon{display:inline}
+.alarm-text{color:#ff4444;font-weight:bold;font-size:18px;display:none;}
+.alarm-bar.active .alarm-text{display:inline}
+.alarm-sub{color:#888;font-size:13px;flex:1;text-align:right}
+
+.main-grid{
+  display:grid;
+  grid-template-columns:280px 1fr 1fr 240px;
+  gap:6px;margin-bottom:6px;
+}
+@media(max-width:1200px){.main-grid{grid-template-columns:1fr 1fr}}
+@media(max-width:700px){.main-grid{grid-template-columns:1fr}}
+
+.panel{
+  background:#141414;border:2px solid #2a2a2a;
+  border-radius:6px;padding:10px;
+}
+.panel-title{
+  color:#aaa;font-size:13px;letter-spacing:2px;
+  border-bottom:2px solid #222;padding-bottom:5px;margin-bottom:8px;
+  text-transform:uppercase;font-weight:bold;
+}
+
+.gauge-row{display:flex;gap:4px;margin-bottom:4px;flex-wrap:wrap;}
+.gauge{
+  flex:1;min-width:70px;background:#0d0d0d;
+  border:2px solid #222;border-radius:4px;padding:5px 8px;
+}
+.gauge-label{color:#888;font-size:11px;margin-bottom:2px;}
+.gauge-value{font-size:20px;font-weight:bold;letter-spacing:1px;}
+.gauge-value.normal{color:#44cc44}
+.gauge-value.warning{color:#ffaa00}
+.gauge-value.danger{color:#ff2222;animation:blink 0.5s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0.3}}
+
+.cctv-grid{display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-top:4px;}
+.cctv-unit{background:#050505;border:1.5px solid #1a2a1a;border-radius:3px;overflow:hidden;position:relative;}
+.cctv-canvas{width:100%;display:block;aspect-ratio:4/3;}
+.cctv-overlay{position:absolute;top:0;left:0;right:0;padding:2px 5px;display:flex;justify-content:space-between;align-items:center;background:linear-gradient(180deg,rgba(0,0,0,0.7),transparent);pointer-events:none;z-index:2;}
+.cctv-overlay .cam-label{color:#44cc44;font-size:8px;font-weight:bold;letter-spacing:1px;text-shadow:0 0 3px rgba(0,0,0,0.8);}
+.cctv-overlay .cam-time{color:#44cc44;font-size:8px;font-family:monospace;text-shadow:0 0 3px rgba(0,0,0,0.8);}
+.cctv-corner{position:absolute;width:8px;height:8px;border:1.5px solid rgba(68,204,68,0.25);pointer-events:none;z-index:2;}
+.cctv-corner.tl{top:2px;left:2px;border-right:none;border-bottom:none;}
+.cctv-corner.tr{top:2px;right:2px;border-left:none;border-bottom:none;}
+.cctv-corner.bl{bottom:2px;left:2px;border-right:none;border-top:none;}
+.cctv-corner.br{bottom:2px;right:2px;border-left:none;border-top:none;}
+.cctv-status{position:absolute;bottom:2px;left:5px;color:rgba(68,204,68,0.4);font-size:7px;pointer-events:none;z-index:2;letter-spacing:1px;}
+.cctv-status.recording::before{content:'●';color:#ff4444;animation:recPulse 1s infinite;margin-right:2px;font-size:6px;}
+@keyframes recPulse{0%,100%{opacity:1}50%{opacity:0.3}}
+
+.core-container{background:#080808;border:3px solid #1a2a1a;border-radius:50%;width:100%;aspect-ratio:1;max-width:450px;margin:0 auto;position:relative;overflow:hidden;box-shadow:inset 0 0 50px rgba(0,0,0,0.8),0 0 20px rgba(0,50,0,0.1);}
+.core-inner-ring{position:absolute;top:3%;left:3%;width:94%;height:94%;border-radius:50%;border:2px solid #152015;}
+.core-center{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:#2a2a2a;font-size:11px;letter-spacing:2px;text-align:center;line-height:1.5;pointer-events:none;z-index:2;}
+.fuel-channel{position:absolute;width:16px;height:16px;border-radius:3px;transform:translate(-50%,-50%);transition:all 0.5s ease;border:1px solid rgba(255,255,255,0.08);display:flex;align-items:center;justify-content:center;font-size:5px;color:rgba(255,255,255,0.1);}
+.fuel-channel.normal{background:rgba(30,80,30,0.7);border-color:rgba(50,120,50,0.3);}
+.fuel-channel.warm{background:rgba(80,60,20,0.8);border-color:rgba(150,120,30,0.4);}
+.fuel-channel.hot{background:rgba(120,40,20,0.9);border-color:rgba(200,80,30,0.5);animation:chHot 0.8s infinite;}
+.fuel-channel.critical{background:rgba(180,20,10,0.95);border-color:rgba(255,50,20,0.7);animation:chCrit 0.2s infinite;}
+.fuel-channel.destroyed{background:rgba(60,10,5,0.6);border-color:rgba(80,20,10,0.3);opacity:0.5;}
+@keyframes chHot{0%,100%{opacity:1}50%{opacity:0.6}}
+@keyframes chCrit{0%,100%{opacity:1;box-shadow:0 0 12px rgba(255,50,20,0.6)}50%{opacity:0.3;box-shadow:0 0 20px rgba(255,50,20,0.9)}}
+
+.core-stats{display:flex;justify-content:space-around;padding:6px 8px;margin-top:5px;background:#0d0d0d;border:2px solid #1a1a1a;border-radius:4px;font-size:13px;}
+.core-stats .item{display:flex;align-items:center;gap:4px;}
+.core-stats .dot-c{width:10px;height:10px;border-radius:2px;display:inline-block;}
+.core-stats .dot-c.g{background:rgba(30,80,30,0.9)}
+.core-stats .dot-c.y{background:rgba(80,60,20,0.9)}
+.core-stats .dot-c.o{background:rgba(120,40,20,0.9)}
+.core-stats .dot-c.r{background:rgba(180,20,10,0.9)}
+.core-stats .dot-c.d{background:rgba(60,10,5,0.6)}
+.core-stats .num{font-weight:bold;font-size:16px;}
+
+.dual-selsyn{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:6px;}
+.selsyn-unit{background:#0a0a0a;border:2px solid #1e1e1e;border-radius:4px;padding:5px;text-align:center;}
+.selsyn-unit .unit-label{color:#888;font-size:12px;letter-spacing:2px;margin-bottom:4px;padding-bottom:3px;border-bottom:2px solid #1a1a1a;font-weight:bold;}
+.selsyn-container{position:relative;width:100%;aspect-ratio:1;max-width:220px;margin:0 auto;overflow:hidden;border-radius:50%;border:2px solid #1a2a1a;background:#080808;}
+.selsyn-dot{position:absolute;width:10px;height:10px;border-radius:50%;background:#0d0d0d;border:1.5px solid #1a1a1a;transform:translate(-50%,-50%);transition:all 0.5s ease;display:flex;align-items:center;justify-content:center;z-index:1;}
+.selsyn-dot .needle{width:2px;height:6px;background:#44cc44;border-radius:1px;transform-origin:bottom center;position:absolute;bottom:50%;transition:all 0.5s ease;}
+.selsyn-dot .needle.out{background:#ff4444;height:7px;}
+.selsyn-dot .needle.mid{background:#ffaa00;height:6px;}
+.selsyn-dot.in .needle{transform:rotate(0deg);}
+.selsyn-dot.out .needle{transform:rotate(180deg);}
+.selsyn-dot.mid .needle{transform:rotate(90deg);}
+.selsyn-dot.destroyed{opacity:0.3;background:#1a0505;}
+.selsyn-dot.destroyed .needle{background:#331111;}
+.selsyn-stats{display:flex;justify-content:space-around;padding:4px 6px;margin-top:4px;font-size:12px;background:#0a0a0a;border:1px solid #1a1a1a;border-radius:3px;}
+.selsyn-stats .item{display:flex;align-items:center;gap:3px;}
+.selsyn-stats .dot-i{width:7px;height:7px;border-radius:50%;display:inline-block;}
+.selsyn-stats .dot-i.g{background:#44cc44}
+.selsyn-stats .dot-i.y{background:#ffaa00}
+.selsyn-stats .dot-i.r{background:#ff4444}
+.selsyn-stats .dot-i.d{background:#331111}
+.selsyn-stats .num{font-weight:bold;font-size:14px;}
+
+.controls-grid{display:grid;grid-template-columns:1fr 1fr;gap:4px;margin:4px 0;}
+.btn{
+  background:#1a1a1a;border:2px solid #333;
+  color:#ddd;padding:8px 4px;border-radius:4px;
+  font-family:'Courier New',monospace;font-size:12px;
+  cursor:pointer;transition:all 0.12s;text-align:center;
+  line-height:1.3;font-weight:bold;
+}
+.btn:hover{background:#2a2a2a;border-color:#555}
+.btn:active{transform:scale(0.96)}
+.btn.danger{background:#3a0000;border-color:#770000;color:#ff4444}
+.btn.danger:hover{background:#4a0000}
+.btn.warning{background:#3a2a00;border-color:#775500;color:#ffaa00}
+.btn.warning:hover{background:#4a3a00}
+.btn.success{background:#003a00;border-color:#007700;color:#44cc44}
+.btn.success:hover{background:#004a00}
+.btn.info{background:#002a3a;border-color:#005577;color:#44aaff}
+.btn.info:hover{background:#003a4a}
+.btn:disabled{opacity:0.25;cursor:not-allowed}
+.btn.big{font-size:14px;padding:12px 6px}
+.btn.small{font-size:10px;padding:5px 3px}
+
+.log-area{background:#0a0a0a;border:2px solid #1a1a1a;height:120px;overflow-y:auto;padding:6px 10px;font-size:13px;line-height:1.6;}
+.log-area::-webkit-scrollbar{width:6px}
+.log-area::-webkit-scrollbar-track{background:#0a0a0a}
+.log-area::-webkit-scrollbar-thumb{background:#333;border-radius:3px}
+.log-entry{opacity:0.9}
+.log-entry.critical{color:#ff4444;opacity:1}
+.log-entry.warning{color:#ffaa00}
+.log-entry.info{color:#88aacc}
+.log-entry.success{color:#44cc44}
+.log-entry.system{color:#777}
+.log-entry.data{color:#66ddff}
+.log-entry.voice{color:#ff8844;font-weight:bold}
+
+.status-bar{display:flex;gap:12px;padding:4px 0;font-size:12px;color:#666;flex-wrap:wrap;}
+.status-bar .stat{display:flex;align-items:center;gap:4px;}
+.status-bar .dot{width:6px;height:6px;border-radius:50%;display:inline-block;}
+.dot.green{background:#44cc44}
+.dot.yellow{background:#ffaa00}
+.dot.red{background:#ff4444}
+
+.lamp{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:3px;font-size:11px;background:#151515;border:2px solid #2a2a2a;}
+.lamp .bulb{width:8px;height:8px;border-radius:50%;}
+.lamp .bulb.on-green{background:#44cc44;box-shadow:0 0 6px #44cc44;}
+.lamp .bulb.on-red{background:#ff4444;box-shadow:0 0 6px #ff4444;}
+.lamp .bulb.on-yellow{background:#ffaa00;box-shadow:0 0 6px #ffaa00;}
+.lamp .bulb.off{background:#333;}
+
+.divider{border-top:2px solid #1a1a1a;margin:6px 0;}
+.progress-bar{height:6px;background:#1a1a1a;border-radius:3px;margin:4px 0;overflow:hidden;}
+.progress-fill{height:100%;border-radius:3px;transition:width 0.3s;}
+.progress-fill.green{background:#44cc44}
+.progress-fill.yellow{background:#ffaa00}
+.progress-fill.red{background:#ff4444}
+.progress-fill.gray{background:#555}
+
+.cyr-label{font-size:11px;color:#888;letter-spacing:1px;margin-bottom:2px;}
+
+.post-accident-banner{background:linear-gradient(90deg,#1a0000,#2a0505,#1a0000);border:2px solid #660000;padding:6px 12px;margin-bottom:6px;border-radius:4px;display:none;justify-content:space-between;align-items:center;}
+.post-accident-banner.active{display:flex;}
+.post-accident-banner .title{color:#ff4444;font-size:16px;font-weight:bold;letter-spacing:3px;animation:textPulse 2s infinite;}
+@keyframes textPulse{0%,100%{opacity:1}50%{opacity:0.6}}
+.post-accident-banner .info{color:#ff8844;font-size:13px;}
+.post-accident-banner .badge{background:#440000;color:#ff6666;padding:4px 12px;border-radius:3px;font-size:12px;font-weight:bold;border:1px solid #880000;}
+
+.data-panel{background:#0a0a1a;border:2px solid #1a2a3a;border-radius:4px;padding:6px 8px;margin-top:4px;display:none;}
+.data-panel.active{display:block;}
+.data-panel .data-title{color:#4488ff;font-size:11px;letter-spacing:2px;border-bottom:1px solid #1a2a3a;padding-bottom:3px;margin-bottom:4px;}
+.data-row{display:flex;justify-content:space-between;padding:2px 4px;font-size:11px;border-bottom:1px solid #0d0d1a;}
+.data-row .label{color:#6688aa;}
+.data-row .value{color:#66ddff;font-weight:bold;font-family:monospace;}
+
+.ending-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.93);display:flex;align-items:center;justify-content:center;z-index:1000;}
+.ending-box{max-width:520px;padding:28px;text-align:center;border:3px solid #444;border-radius:6px;background:#151515;}
+.ending-box h2{font-size:26px;margin-bottom:10px;}
+.ending-box p{font-size:13px;color:#aaa;line-height:1.7;margin-bottom:10px;}
+.ending-box .btn-group{display:flex;gap:10px;justify-content:center;margin-top:12px;}
+.ending-box .btn-group .btn{padding:10px 20px;font-size:14px;min-width:120px;}
+.ending-box .btn-group .btn.primary{background:#003a00;border-color:#007700;color:#44cc44;}
+.ending-box .btn-group .btn.primary:hover{background:#004a00;}
+.ending-box .btn-group .btn.secondary{background:#002a3a;border-color:#005577;color:#44aaff;}
+.ending-box .btn-group .btn.secondary:hover{background:#003a4a;}
+</style>
+</head>
+<body>
+
+<div class="game-container" id="app">
+  <div class="header">
+    <div>
+      <h1>ЧЕРНОБЫЛЬ · 4号机组</h1>
+      <div class="sub">RBMK-1000 控制室模拟系统 · 1986年4月26日</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <div class="volume-control">
+        <span class="vol-icon" id="volIcon" onclick="toggleMute()">🔊</span>
+        <input type="range" class="volume-slider" id="volSlider" min="0" max="100" value="70" oninput="setVolume(this.value)">
+        <span class="volume-label" id="volLabel">70%</span>
+      </div>
+      <div class="clock-panel">
+        <div class="time" id="gameTime">01:23:00</div>
+        <div class="date">基辅时间 · 星期六</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="post-accident-banner" id="accidentBanner">
+    <span class="title">☢☢ 核事故已发生 ☢☢</span>
+    <span class="info" id="accidentInfo">4号反应堆爆炸 · 放射性物质泄漏中</span>
+    <span class="badge">数据采集模式</span>
+  </div>
+
+  <div class="alarm-bar" id="alarmBar">
+    <span class="alarm-icon">⚠</span>
+    <span class="alarm-text" id="alarmText">系统正常</span>
+    <span class="alarm-sub" id="alarmSub">待机中 · 无报警</span>
+  </div>
+
+  <div class="main-grid">
+    <div class="panel">
+      <div class="panel-title">🎛 SIUR · 操作员控制台</div>
+      
+      <div class="gauge-row">
+        <div class="gauge"><div class="gauge-label">热功率 MW</div><div class="gauge-value normal" id="powerDisplay">3200</div></div>
+        <div class="gauge"><div class="gauge-label">反应性 Δk/k</div><div class="gauge-value normal" id="reactivityDisplay">+0.020</div></div>
+      </div>
+      <div class="gauge-row">
+        <div class="gauge"><div class="gauge-label">堆芯温度 °C</div><div class="gauge-value normal" id="tempDisplay">285</div></div>
+        <div class="gauge"><div class="gauge-label">蒸汽压力 atm</div><div class="gauge-value normal" id="pressureDisplay">68</div></div>
+      </div>
+      <div class="gauge-row">
+        <div class="gauge"><div class="gauge-label">冷却水 %</div><div class="gauge-value normal" id="flowDisplay">100</div></div>
+        <div class="gauge"><div class="gauge-label">辐射 mR/h</div><div class="gauge-value normal" id="radiationDisplay">0.02</div></div>
+      </div>
+
+      <div class="divider"></div>
+      <div class="cyr-label">—— 功率控制 МОЩНОСТЬ ——</div>
+      <div class="controls-grid">
+        <button class="btn" onclick="adjPower(-1000)">◢◢ 降 -1000MW</button>
+        <button class="btn" onclick="adjPower(1000)">◣◣ 升 +1000MW</button>
+        <button class="btn" onclick="adjPower(-500)">◢ 降 -500MW</button>
+        <button class="btn" onclick="adjPower(500)">◣ 升 +500MW</button>
+        <button class="btn" onclick="adjPower(-100)">▽ 降 -100MW</button>
+        <button class="btn" onclick="adjPower(100)">△ 升 +100MW</button>
+        <button class="btn small" onclick="adjPower(-10)">▽ 降 -10MW</button>
+        <button class="btn small" onclick="adjPower(10)">△ 升 +10MW</button>
+      </div>
+
+      <div class="divider"></div>
+      <div class="cyr-label">—— 控制棒 СТЕРЖНИ ——</div>
+      <div class="controls-grid">
+        <button class="btn warning" onclick="adjRods(-30)">↑↑ 拔棒 ×30</button>
+        <button class="btn success" onclick="adjRods(30)">↓↓ 插棒 ×30</button>
+        <button class="btn warning" onclick="adjRods(-10)">↑ 拔棒 ×10</button>
+        <button class="btn success" onclick="adjRods(10)">↓ 插棒 ×10</button>
+        <button class="btn" onclick="adjRods(-5)">↑ 拔棒 ×5</button>
+        <button class="btn" onclick="adjRods(5)">↓ 插棒 ×5</button>
+        <button class="btn small" onclick="adjRods(-1)">↑ 拔棒 ×1</button>
+        <button class="btn small" onclick="adjRods(1)">↓ 插棒 ×1</button>
+      </div>
+
+      <div class="divider"></div>
+      <div class="cyr-label">—— 冷却系统 ОХЛАЖДЕНИЕ ——</div>
+      <div class="controls-grid">
+        <button class="btn" onclick="adjFlow(-25)">⊘⊘ 减流量 25%</button>
+        <button class="btn" onclick="adjFlow(25)">⊕⊕ 增流量 25%</button>
+        <button class="btn" onclick="adjFlow(-10)">⊘ 减流量 10%</button>
+        <button class="btn" onclick="adjFlow(10)">⊕ 增流量 10%</button>
+        <button class="btn small" onclick="adjFlow(-5)">⊘ 减流量 5%</button>
+        <button class="btn small" onclick="adjFlow(5)">⊕ 增流量 5%</button>
+      </div>
+
+      <div class="divider"></div>
+      <div class="cyr-label">—— 主循环泵 НАСОСЫ ——</div>
+      <div class="controls-grid">
+        <button class="btn warning" onclick="togglePump(1)">◈ 启动 7号泵</button>
+        <button class="btn warning" onclick="togglePump(2)">◈ 启动 8号泵</button>
+        <button class="btn" onclick="togglePump(-1)">◊ 停止 7号泵</button>
+        <button class="btn" onclick="togglePump(-2)">◊ 停止 8号泵</button>
+      </div>
+
+      <div class="divider"></div>
+      <div class="cyr-label">—— 涡轮 / 测试 ТУРБИНА ——</div>
+      <div class="controls-grid">
+        <button class="btn info big" onclick="startTurbineTest()">▶ 开始涡轮测试</button>
+        <button class="btn" onclick="stopTurbine()">■ 关闭涡轮</button>
+        <button class="btn" onclick="toggleAuto()" id="autoBtn">AUTO: 开</button>
+        <button class="btn" onclick="resetAlarm()">🔕 确认警报</button>
+      </div>
+
+      <div class="divider"></div>
+      <div class="cyr-label">—— 辅助系统 ВСПОМОГАТЕЛЬНЫЙ ——</div>
+      <div class="controls-grid">
+        <button class="btn success" onclick="emergencyCooling()">❄❄ 应急冷却注入</button>
+        <button class="btn" onclick="toggleDiesel()" id="dieselBtn">⛁ 柴油发电机</button>
+        <button class="btn" onclick="adjSteam(-20)">⊘ 减蒸汽 20%</button>
+        <button class="btn" onclick="adjSteam(20)">⊕ 增蒸汽 20%</button>
+      </div>
+
+      <div class="divider"></div>
+      <div class="cyr-label" style="color:#ff4444">—— 紧急系统 АВАРИЙНЫЙ ——</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px">
+        <button class="btn danger big" onclick="pressAZ5()">☢☢ AZ-5<br>紧急停堆</button>
+        <button class="btn warning big" onclick="pressBAZ()">⚠⚠ BAZ<br>快速保护</button>
+      </div>
+
+      <div class="divider"></div>
+      <div style="display:flex;gap:4px;flex-wrap:wrap;font-size:11px">
+        <span class="lamp"><span class="bulb on-green"></span> 堆芯临界</span>
+        <span class="lamp" id="pumpLamp"><span class="bulb on-green"></span> 6/8泵</span>
+        <span class="lamp" id="turbineLamp"><span class="bulb on-green"></span> 涡轮</span>
+        <span class="lamp" id="autoLamp"><span class="bulb on-green"></span> 自动</span>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title">☢ АКТИВНАЯ ЗОНА · 反应堆堆芯</div>
+      
+      <div class="core-container" id="coreContainer">
+        <div class="core-inner-ring"></div>
+        <div class="core-center">RBMK-1000<br>АЗ<br><span style="font-size:8px;color:#333">1659 каналов</span></div>
+        <div id="coreChannels"></div>
+      </div>
+
+      <div class="core-stats">
+        <span class="item"><span class="dot-c g"></span> 正常: <span class="num" id="coreNormal" style="color:#44cc44">0</span></span>
+        <span class="item"><span class="dot-c y"></span> 升温: <span class="num" id="coreWarm" style="color:#ffaa00">0</span></span>
+        <span class="item"><span class="dot-c o"></span> 过热: <span class="num" id="coreHot" style="color:#ff6600">0</span></span>
+        <span class="item"><span class="dot-c r"></span> 临界: <span class="num" id="coreCritical" style="color:#ff2222">0</span></span>
+        <span class="item"><span class="dot-c d"></span> 损毁: <span class="num" id="coreDestroyed" style="color:#553333">0</span></span>
+      </div>
+
+      <div style="margin-top:6px">
+        <div style="display:flex;justify-content:space-between;font-size:12px;color:#888">
+          <span>氙-135 毒化</span>
+          <span id="xenonLabel">5%</span>
+        </div>
+        <div class="progress-bar"><div class="progress-fill gray" id="xenonBar" style="width:5%"></div></div>
+      </div>
+      <div style="margin-top:4px">
+        <div style="display:flex;justify-content:space-between;font-size:12px;color:#888">
+          <span>控制棒 <span id="rodsInDisplay" style="color:#44cc44;font-weight:bold">169</span>/211</span>
+          <span>ORM: <span id="ormDisplay" style="color:#44cc44;font-weight:bold">正常</span></span>
+        </div>
+        <div class="progress-bar"><div class="progress-fill green" id="rodBar" style="width:80%"></div></div>
+      </div>
+
+      <div class="data-panel" id="dataPanel">
+        <div class="data-title">📊 事故后数据采集 · 实时读数</div>
+        <div class="data-row"><span class="label">堆芯状态</span><span class="value" id="dataCoreStatus">损毁中</span></div>
+        <div class="data-row"><span class="label">辐射峰值</span><span class="value" id="dataRadPeak">0.00 R/h</span></div>
+        <div class="data-row"><span class="label">石墨温度</span><span class="value" id="dataGraphiteTemp">--- °C</span></div>
+        <div class="data-row"><span class="label">燃料状态</span><span class="value" id="dataFuelStatus">未知</span></div>
+        <div class="data-row"><span class="label">安全壳完整性</span><span class="value" id="dataContainment">已破坏</span></div>
+        <div class="data-row"><span class="label">事故后时间</span><span class="value" id="dataPostTime">00:00</span></div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title">◉ СЕЛЬСИН · 自同步监视器 (211通道)</div>
+      
+      <div class="dual-selsyn">
+        <div class="selsyn-unit">
+          <div class="unit-label">СУЗ 1-106</div>
+          <div class="selsyn-container" id="selsynContainer1"><div id="selsynDots1"></div></div>
+          <div class="selsyn-stats">
+            <span class="item"><span class="dot-i g"></span> <span id="s1in" style="font-weight:bold;color:#44cc44">85</span></span>
+            <span class="item"><span class="dot-i y"></span> <span id="s1mid" style="font-weight:bold;color:#ffaa00">0</span></span>
+            <span class="item"><span class="dot-i r"></span> <span id="s1out" style="font-weight:bold;color:#ff4444">21</span></span>
+            <span class="item"><span class="dot-i d"></span> <span id="s1des" style="font-weight:bold;color:#553333">0</span></span>
+          </div>
+        </div>
+        <div class="selsyn-unit">
+          <div class="unit-label">СУЗ 107-211</div>
+          <div class="selsyn-container" id="selsynContainer2"><div id="selsynDots2"></div></div>
+          <div class="selsyn-stats">
+            <span class="item"><span class="dot-i g"></span> <span id="s2in" style="font-weight:bold;color:#44cc44">84</span></span>
+            <span class="item"><span class="dot-i y"></span> <span id="s2mid" style="font-weight:bold;color:#ffaa00">0</span></span>
+            <span class="item"><span class="dot-i r"></span> <span id="s2out" style="font-weight:bold;color:#ff4444">21</span></span>
+            <span class="item"><span class="dot-i d"></span> <span id="s2des" style="font-weight:bold;color:#553333">0</span></span>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex;justify-content:space-between;padding:6px 10px;background:#0d0d0d;border:2px solid #1a1a1a;border-radius:4px;font-size:13px;color:#888">
+        <span>总计插入: <span style="font-weight:bold;font-size:18px;color:#44cc44" id="rodInCount">169</span></span>
+        <span>拔出: <span style="font-weight:bold;font-size:18px;color:#ff4444" id="rodOutCount">42</span></span>
+      </div>
+
+      <div style="margin-top:6px">
+        <div style="display:flex;justify-content:space-between;font-size:9px;color:#555;margin-bottom:2px;">
+          <span>🎥 СИСТЕМА НАБЛЮДЕНИЯ · 监控系统</span>
+          <span id="camStatus" style="color:#44cc44;">4/4 在线</span>
+        </div>
+        <div class="cctv-grid">
+          <div class="cctv-unit">
+            <canvas id="cam0" class="cctv-canvas"></canvas>
+            <div class="cctv-overlay"><span class="cam-label">КАМ-01 · РЕАКТОР</span><span class="cam-time" id="camTime0">01:23</span></div>
+            <div class="cctv-corner tl"></div><div class="cctv-corner tr"></div><div class="cctv-corner bl"></div><div class="cctv-corner br"></div>
+            <span class="cctv-status recording">REC</span>
+          </div>
+          <div class="cctv-unit">
+            <canvas id="cam1" class="cctv-canvas"></canvas>
+            <div class="cctv-overlay"><span class="cam-label">КАМ-02 · ТУРБИНА</span><span class="cam-time" id="camTime1">01:23</span></div>
+            <div class="cctv-corner tl"></div><div class="cctv-corner tr"></div><div class="cctv-corner bl"></div><div class="cctv-corner br"></div>
+            <span class="cctv-status recording">REC</span>
+          </div>
+          <div class="cctv-unit">
+            <canvas id="cam2" class="cctv-canvas"></canvas>
+            <div class="cctv-overlay"><span class="cam-label">КАМ-03 · НАСОСНАЯ</span><span class="cam-time" id="camTime2">01:23</span></div>
+            <div class="cctv-corner tl"></div><div class="cctv-corner tr"></div><div class="cctv-corner bl"></div><div class="cctv-corner br"></div>
+            <span class="cctv-status recording">REC</span>
+          </div>
+          <div class="cctv-unit">
+            <canvas id="cam3" class="cctv-canvas"></canvas>
+            <div class="cctv-overlay"><span class="cam-label">КАМ-04 · КРЫША</span><span class="cam-time" id="camTime3">01:23</span></div>
+            <div class="cctv-corner tl"></div><div class="cctv-corner tr"></div><div class="cctv-corner bl"></div><div class="cctv-corner br"></div>
+            <span class="cctv-status recording">REC</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title">🔒 安全系统 · 联锁控制</div>
+      
+      <div class="cyr-label">—— 安全系统开关 ——</div>
+      <div style="margin:6px 0">
+        <div class="switch-row" style="display:flex;align-items:center;gap:8px;padding:8px 6px;background:#0d0d0d;border:2px solid #1a1a1a;border-radius:4px;margin-bottom:4px;">
+          <span style="font-size:13px;color:#aaa;flex:1;">ECC 应急堆芯冷却</span>
+          <div class="toggle-btn on" id="eccToggle" onclick="toggleECC()" style="width:44px;height:22px;border-radius:11px;"></div>
+        </div>
+        <div class="switch-row" style="display:flex;align-items:center;gap:8px;padding:8px 6px;background:#0d0d0d;border:2px solid #1a1a1a;border-radius:4px;margin-bottom:4px;">
+          <span style="font-size:13px;color:#aaa;flex:1;">LAR 局部自动调节</span>
+          <div class="toggle-btn on" id="larToggle" onclick="toggleLAR()" style="width:44px;height:22px;border-radius:11px;"></div>
+        </div>
+        <div class="switch-row" style="display:flex;align-items:center;gap:8px;padding:8px 6px;background:#0d0d0d;border:2px solid #1a1a1a;border-radius:4px;margin-bottom:4px;">
+          <span style="font-size:13px;color:#aaa;flex:1;">AZ-5 旁路联锁</span>
+          <div class="toggle-btn" id="bypassToggle" onclick="toggleBypass()" style="width:44px;height:22px;border-radius:11px;"></div>
+        </div>
+        <div class="switch-row" style="display:flex;align-items:center;gap:8px;padding:8px 6px;background:#0d0d0d;border:2px solid #1a1a1a;border-radius:4px;">
+          <span style="font-size:13px;color:#aaa;flex:1;">APS 自动保护系统</span>
+          <div class="toggle-btn on" id="apsToggle" onclick="toggleAPS()" style="width:44px;height:22px;border-radius:11px;"></div>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+      <div class="cyr-label">—— SKALA 计算机查询 ——</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:3px;margin:4px 0;">
+        <button class="btn small success" onclick="selectSKALA('PRIZMA')">PRIZMA</button>
+        <button class="btn small" onclick="selectSKALA('DREG')">DREG</button>
+        <button class="btn small" onclick="selectSKALA('KRV')">KRV</button>
+      </div>
+      <div style="font-size:12px;color:#888;margin-top:4px;padding:6px 8px;background:#0a0a0a;border:2px solid #1a1a1a;border-radius:4px;min-height:36px;" id="skalaDisplay">PRIZMA: 功率分布正常</div>
+
+      <div class="divider"></div>
+      <div class="cyr-label">—— 快速操作 ——</div>
+      <div class="controls-grid">
+        <button class="btn" onclick="setPowerTarget(3200)">设定 100% 功率</button>
+        <button class="btn" onclick="setPowerTarget(1600)">设定 50% 功率</button>
+        <button class="btn" onclick="setPowerTarget(700)">设定 测试功率</button>
+        <button class="btn" onclick="setPowerTarget(200)">设定 200MW</button>
+        <button class="btn" onclick="fullInsert()">全部插入控制棒</button>
+        <button class="btn warning" onclick="fullExtract()">全部拔出控制棒</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel" style="margin-bottom:4px">
+    <div class="panel-title" style="display:flex;justify-content:space-between">
+      <span>📋 事件日志 · 值班组: 佳特洛夫(副总工) 阿基莫夫(组长) 托图诺夫(操作员)</span>
+      <span style="color:#888;font-size:12px;cursor:pointer" onclick="clearLog()">清空</span>
+    </div>
+    <div class="log-area" id="logArea"></div>
+  </div>
+
+  <div class="status-bar">
+    <span class="stat"><span class="dot green" id="statusDot"></span> <span id="statusText">系统在线</span></span>
+    <span class="stat" id="phaseDisplay">阶段: 正常运行</span>
+    <span class="stat">测试: <span id="testStatus">未开始</span></span>
+    <span class="stat">操作: <span id="opCount">0</span></span>
+    <span class="stat">泵: <span id="pumpStatus">6/8</span></span>
+    <span class="stat">涡轮: <span id="turbineStatus">运行</span></span>
+  </div>
+</div>
+
+<div class="ending-overlay" id="endingOverlay" style="display:none">
+  <div class="ending-box" id="endingBox">
+    <h2 id="endingTitle">游戏结束</h2>
+    <div id="endingContent"></div>
+    <div class="btn-group">
+      <button class="btn primary" onclick="resetGame()">🔄 重新开始</button>
+      <button class="btn secondary" id="continueBtn" onclick="continueMonitoring()">📡 继续监测</button>
+    </div>
+  </div>
+</div>
+
+<style>
+.toggle-btn{position:relative;cursor:pointer;}
+.toggle-btn.on{background:#2a4a2a;border-color:#44cc44;}
+.toggle-btn::after{content:'';position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:#555;transition:all 0.2s;}
+.toggle-btn.on::after{left:24px;background:#44cc44;}
+</style>
+
+<script>
+// ========== 语音警报系统 ==========
+let speechSynth = null;
+let speechVolume = 0.7;
+let speechEnabled = true;
+
+function initSpeech(){
+  speechSynth = window.speechSynthesis;
+  console.log('Speech synthesis initialized:', !!speechSynth);
+}
+
+function speakText(text, rate=0.85, pitch=0.9){
+  if(!speechSynth || !speechEnabled) return;
+  // 取消正在播放的语音
+  speechSynth.cancel();
+  
+  const utterance = new SpeechSynthesisUtterance(text);
+  utterance.lang = 'zh-CN';
+  utterance.rate = rate;
+  utterance.pitch = pitch;
+  utterance.volume = speechVolume;
+  
+  // 尝试选择中文语音
+  const voices = speechSynth.getVoices();
+  const zhVoice = voices.find(v => v.lang.includes('zh'));
+  if(zhVoice) utterance.voice = zhVoice;
+  
+  speechSynth.speak(utterance);
+  return utterance;
+}
+
+// 事故语音广播
+function playAccidentBroadcast(){
+  const messages = [
+    { text: '最高优先级通知，4号反应堆发生氢气爆炸，确认事故等级为7级，请所有人员立即撤离至污染半径外。', delay: 0 },
+    { text: '预计污染扩散半径3.7公里。', delay: 5000 },
+    { text: '更正，9.2公里。', delay: 10000 },
+    { text: '更正，27.9公里。', delay: 15000 },
+    { text: '更正，49.5公里。', delay: 20000 },
+    { text: '更正，79.8公里。', delay: 25000 },
+  ];
+  
+  messages.forEach((msg, i) => {
+    setTimeout(() => {
+      speakText(msg.text, 0.8, 0.85);
+      addLog('🔊 ' + msg.text, 'voice');
+    }, msg.delay);
+  });
+  
+  // 最后一条更正后追加日志
+  setTimeout(() => {
+    addLog('☢ 辐射云已扩散至79.8公里范围，覆盖普里皮亚季及周边区域', 'critical');
+  }, 30000);
+}
+
+// ========== 音效系统 ==========
+let audioCtx = null;
+
+function initAudio(){
+  try{
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    return true;
+  } catch(e){ return false; }
+}
+
+function resumeAudio(){
+  if(audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+}
+
+let soundEnabled = true;
+let soundVolume = 0.7;
+let alarmLoopActive = false;
+let alarmLoopNodes = null;
+let accidentAlarmActive = false;
+let accidentAlarmNodes = null;
+
+function getVol(){ return soundEnabled ? soundVolume : 0; }
+
+function setVolume(val){
+  soundVolume = parseInt(val) / 100;
+  speechVolume = soundVolume;
+  document.getElementById('volLabel').textContent = Math.round(soundVolume * 100) + '%';
+  const icon = document.getElementById('volIcon');
+  if(soundVolume === 0 || !soundEnabled) icon.textContent = '🔇';
+  else if(soundVolume < 0.3) icon.textContent = '🔈';
+  else if(soundVolume < 0.6) icon.textContent = '🔉';
+  else icon.textContent = '🔊';
+}
+
+function toggleMute(){
+  soundEnabled = !soundEnabled;
+  speechEnabled = soundEnabled;
+  const slider = document.getElementById('volSlider');
+  if(!soundEnabled){
+    slider.value = 0;
+    setVolume(0);
+    document.getElementById('volIcon').textContent = '🔇';
+    stopAlarmLoop();
+    stopAccidentAlarm();
+    if(speechSynth) speechSynth.cancel();
+  } else {
+    slider.value = 70;
+    setVolume(0.7);
+  }
+}
+
+function playClick(){
+  if(!audioCtx) return;
+  resumeAudio();
+  try {
+    const o = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    o.connect(g); g.connect(audioCtx.destination);
+    o.type = 'square';
+    o.frequency.setValueAtTime(800, audioCtx.currentTime);
+    o.frequency.exponentialRampToValueAtTime(400, audioCtx.currentTime + 0.05);
+    g.gain.setValueAtTime(getVol() * 0.08, audioCtx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.08);
+    o.start(); o.stop(audioCtx.currentTime + 0.08);
+  } catch(e){}
+}
+
+function playWarning(){
+  if(!audioCtx) return;
+  resumeAudio();
+  try {
+    const o = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    o.connect(g); g.connect(audioCtx.destination);
+    o.type = 'sawtooth';
+    o.frequency.setValueAtTime(600, audioCtx.currentTime);
+    o.frequency.setValueAtTime(800, audioCtx.currentTime + 0.15);
+    o.frequency.setValueAtTime(600, audioCtx.currentTime + 0.3);
+    g.gain.setValueAtTime(getVol() * 0.1, audioCtx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.4);
+    o.start(); o.stop(audioCtx.currentTime + 0.4);
+  } catch(e){}
+}
+
+function playCritical(){
+  if(!audioCtx) return;
+  resumeAudio();
+  try {
+    const o = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    o.connect(g); g.connect(audioCtx.destination);
+    o.type = 'sawtooth';
+    o.frequency.setValueAtTime(1000, audioCtx.currentTime);
+    o.frequency.setValueAtTime(500, audioCtx.currentTime + 0.1);
+    o.frequency.setValueAtTime(1000, audioCtx.currentTime + 0.2);
+    o.frequency.setValueAtTime(500, audioCtx.currentTime + 0.3);
+    g.gain.setValueAtTime(getVol() * 0.15, audioCtx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.4);
+    o.start(); o.stop(audioCtx.currentTime + 0.4);
+  } catch(e){}
+}
+
+function playAZ5(){
+  if(!audioCtx) return;
+  resumeAudio();
+  try {
+    const o = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    o.connect(g); g.connect(audioCtx.destination);
+    o.type = 'sine';
+    o.frequency.setValueAtTime(80, audioCtx.currentTime);
+    o.frequency.exponentialRampToValueAtTime(40, audioCtx.currentTime + 0.5);
+    g.gain.setValueAtTime(getVol() * 0.2, audioCtx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.6);
+    o.start(); o.stop(audioCtx.currentTime + 0.6);
+  } catch(e){}
+}
+
+function playExplosion(){
+  if(!audioCtx) return;
+  resumeAudio();
+  try {
+    const o1 = audioCtx.createOscillator();
+    const g1 = audioCtx.createGain();
+    o1.connect(g1); g1.connect(audioCtx.destination);
+    o1.type = 'sine';
+    o1.frequency.setValueAtTime(60, audioCtx.currentTime);
+    o1.frequency.exponentialRampToValueAtTime(15, audioCtx.currentTime + 2.0);
+    g1.gain.setValueAtTime(getVol() * 0.35, audioCtx.currentTime);
+    g1.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 2.0);
+    o1.start(); o1.stop(audioCtx.currentTime + 2.0);
+    
+    const bs = audioCtx.sampleRate * 1.0;
+    const buf = audioCtx.createBuffer(1, bs, audioCtx.sampleRate);
+    const d = buf.getChannelData(0);
+    for(let i=0; i<bs; i++) d[i] = (Math.random()*2-1) * Math.pow(1-i/bs, 2);
+    const n = audioCtx.createBufferSource();
+    n.buffer = buf;
+    const g2 = audioCtx.createGain();
+    n.connect(g2); g2.connect(audioCtx.destination);
+    g2.gain.setValueAtTime(getVol() * 0.25, audioCtx.currentTime);
+    g2.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 1.0);
+    n.start(); n.stop(audioCtx.currentTime + 1.0);
+  } catch(e){}
+}
+
+function playSuccess(){
+  if(!audioCtx) return;
+  resumeAudio();
+  try {
+    [523, 659, 784].forEach((f, i) => {
+      const o = audioCtx.createOscillator();
+      const g = audioCtx.createGain();
+      o.connect(g); g.connect(audioCtx.destination);
+      o.type = 'sine';
+      o.frequency.setValueAtTime(f, audioCtx.currentTime + i*0.12);
+      g.gain.setValueAtTime(0, audioCtx.currentTime + i*0.12);
+      g.gain.linearRampToValueAtTime(getVol()*0.1, audioCtx.currentTime + i*0.12 + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + i*0.12 + 0.2);
+      o.start(audioCtx.currentTime + i*0.12);
+      o.stop(audioCtx.currentTime + i*0.12 + 0.2);
+    });
+  } catch(e){}
+}
+
+function startAlarmLoop(){
+  if(!audioCtx || alarmLoopActive) return;
+  resumeAudio();
+  try {
+    alarmLoopActive = true;
+    const o = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    const l = audioCtx.createOscillator();
+    const lg = audioCtx.createGain();
+    o.connect(g); g.connect(audioCtx.destination);
+    l.connect(lg); lg.connect(g.gain);
+    o.type = 'square';
+    o.frequency.setValueAtTime(880, audioCtx.currentTime);
+    l.type = 'sine';
+    l.frequency.setValueAtTime(4, audioCtx.currentTime);
+    lg.gain.setValueAtTime(0.5);
+    g.gain.setValueAtTime(getVol() * 0.08);
+    o.start(); l.start();
+    alarmLoopNodes = { o, g, l, lg };
+  } catch(e){}
+}
+
+function stopAlarmLoop(){
+  if(alarmLoopNodes){
+    try{ alarmLoopNodes.o.stop(); }catch(e){}
+    try{ alarmLoopNodes.l.stop(); }catch(e){}
+    alarmLoopNodes = null;
+  }
+  alarmLoopActive = false;
+}
+
+function startAccidentAlarm(){
+  if(!audioCtx || accidentAlarmActive) return;
+  resumeAudio();
+  try {
+    accidentAlarmActive = true;
+    
+    const o1 = audioCtx.createOscillator();
+    const g1 = audioCtx.createGain();
+    const l1 = audioCtx.createOscillator();
+    const lg1 = audioCtx.createGain();
+    o1.connect(g1); g1.connect(audioCtx.destination);
+    l1.connect(lg1); lg1.connect(g1.gain);
+    o1.type = 'sawtooth';
+    o1.frequency.setValueAtTime(220, audioCtx.currentTime);
+    l1.type = 'square';
+    l1.frequency.setValueAtTime(1.5, audioCtx.currentTime);
+    lg1.gain.setValueAtTime(0.6);
+    g1.gain.setValueAtTime(getVol() * 0.12);
+    o1.start(); l1.start();
+    
+    const o2 = audioCtx.createOscillator();
+    const g2 = audioCtx.createGain();
+    const l2 = audioCtx.createOscillator();
+    const lg2 = audioCtx.createGain();
+    o2.connect(g2); g2.connect(audioCtx.destination);
+    l2.connect(lg2); lg2.connect(g2.gain);
+    o2.type = 'square';
+    o2.frequency.setValueAtTime(880, audioCtx.currentTime);
+    l2.type = 'sine';
+    l2.frequency.setValueAtTime(6, audioCtx.currentTime);
+    lg2.gain.setValueAtTime(0.5);
+    g2.gain.setValueAtTime(getVol() * 0.06);
+    o2.start(); l2.start();
+    
+    const o3 = audioCtx.createOscillator();
+    const g3 = audioCtx.createGain();
+    o3.connect(g3); g3.connect(audioCtx.destination);
+    o3.type = 'sine';
+    o3.frequency.setValueAtTime(55, audioCtx.currentTime);
+    g3.gain.setValueAtTime(getVol() * 0.08);
+    o3.start();
+    
+    accidentAlarmNodes = { o1, g1, l1, lg1, o2, g2, l2, lg2, o3, g3 };
+  } catch(e){}
+}
+
+function stopAccidentAlarm(){
+  if(accidentAlarmNodes){
+    try{ accidentAlarmNodes.o1.stop(); }catch(e){}
+    try{ accidentAlarmNodes.l1.stop(); }catch(e){}
+    try{ accidentAlarmNodes.o2.stop(); }catch(e){}
+    try{ accidentAlarmNodes.l2.stop(); }catch(e){}
+    try{ accidentAlarmNodes.o3.stop(); }catch(e){}
+    accidentAlarmNodes = null;
+  }
+  accidentAlarmActive = false;
+}
+
+// ========== 游戏状态 ==========
+const G = {
+  power: 3200, reactivity: 0.02, temp: 285, pressure: 68,
+  flow: 100, radiation: 0.02, rodsIn: 169, xenon: 5,
+  pumps: 6, turbineOn: true, autoControl: true,
+  testRunning: false, seconds: 0, gameOver: false,
+  phase: 'normal', crisisTriggered: false,
+  pump7: false, pump8: false,
+  neutron: 82, drumLevel: 120, rpm: 3000,
+  steam: 100, dieselOn: false,
+  eccOn: true, larOn: true, bypassOn: false, apsOn: true,
+  opCount: 0, coreHealth: [],
+  prevAlarmLevel: 'normal',
+  accidentOccurred: false,
+  postAccidentTime: 0,
+  radPeak: 0,
+  graphiteFire: false,
+  endingShown: false,
+  broadcastPlayed: false,
+};
+const TOTAL_RODS = 211, MAX_POWER = 3500;
+const CORE_CHANNELS = 200;
+const $ = id => document.getElementById(id);
+const logArea = $('logArea');
+
+function addLog(msg, type='info'){
+  const time = formatTime(G.seconds);
+  const div = document.createElement('div');
+  div.className = `log-entry ${type}`;
+  div.textContent = `[${time}] ${msg}`;
+  logArea.appendChild(div);
+  logArea.scrollTop = logArea.scrollHeight;
+  if(logArea.children.length > 100) logArea.removeChild(logArea.firstChild);
+}
+function clearLog(){logArea.innerHTML='';}
+
+function formatTime(s){
+  const total = 23*60 + s;
+  const h = Math.floor(total/60), m = total%60, sec = s%60;
+  return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`;
+}
+function updateClock(){ $('gameTime').textContent = formatTime(G.seconds); }
+
+// ========== 4路监控 ==========
+function renderAllCams(){
+  for(let i=0; i<4; i++) renderCam(i);
+  const t = formatTime(G.seconds).substring(0,5);
+  for(let i=0; i<4; i++) document.getElementById('camTime'+i).textContent = t;
+  const status = document.getElementById('camStatus');
+  if(G.accidentOccurred){status.textContent='⚠ 部分离线';status.style.color='#ff4444';}
+  else if(G.phase==='crisis'){status.textContent='⚠ 信号异常';status.style.color='#ffaa00';}
+  else{status.textContent='4/4 在线';status.style.color='#44cc44';}
+}
+function renderCam(idx){
+  const canvas = document.getElementById('cam'+idx);
+  if(!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const w = canvas.width = canvas.clientWidth;
+  const h = canvas.height = canvas.clientHeight;
+  const crisis = G.phase === 'crisis' || G.accidentOccurred;
+  const baseColor = [[68,204,68],[68,180,220],[220,180,68],[200,100,60]][idx];
+  const imageData = ctx.createImageData(w, h);
+  const data = imageData.data;
+  for(let i=0; i<data.length; i+=4){
+    const noise = Math.random() * 40;
+    let r,g,b;
+    if(crisis && idx === 0){r=80+noise+(G.temp/1200)*80;g=15+noise*0.2;b=8+noise*0.1;}
+    else if(crisis && idx === 3){r=100+noise+Math.random()*60;g=30+noise*0.3;b=10+noise*0.1;}
+    else{r=baseColor[0]*0.15+noise*0.5;g=baseColor[1]*0.15+noise*0.5;b=baseColor[2]*0.15+noise*0.5;}
+    data[i]=Math.min(255,r);data[i+1]=Math.min(255,g);data[i+2]=Math.min(255,b);data[i+3]=255;
+  }
+  for(let y=0;y<h;y+=3){const idx2=y*w*4;for(let x=0;x<w*4;x+=4){if(idx2+x<data.length){data[idx2+x]*=0.85;data[idx2+x+1]*=0.85;data[idx2+x+2]*=0.85;}}}
+  ctx.putImageData(imageData,0,0);
+  if(crisis&&idx===0){ctx.fillStyle='rgba(255,50,20,0.5)';ctx.font='bold 10px monospace';ctx.fillText('☢ РАЗРУШЕН',4,20);}
+  if(crisis&&idx===3){ctx.fillStyle='rgba(255,150,50,0.5)';ctx.font='9px monospace';ctx.fillText('🔥 ПОЖАР',4,20);}
+  ctx.fillStyle=crisis?'rgba(255,80,30,0.5)':'rgba(68,204,68,0.4)';ctx.font='8px monospace';
+  ctx.fillText(`${Math.round(G.temp)}°C`,4,h-4);
+}
+
+// ========== 堆芯 ==========
+function buildCore(){
+  const container = $('coreContainer');
+  const channels = $('coreChannels');
+  if(!container || !channels) return;
+  channels.innerHTML = '';
+  const rect = container.getBoundingClientRect();
+  const size = Math.min(rect.width, rect.height) || 350;
+  const radius = size * 0.42;
+  const cx = size/2, cy = size/2;
+  G.coreHealth = [];
+  const rows = 16;
+  const spacing = radius * 0.10;
+  let idx = 0;
+  for(let row=-rows/2; row<rows/2; row++){
+    const cols = Math.round(Math.sqrt(1 - (row/(rows/2))**2) * rows * 0.82);
+    const offX = (row % 2 === 0) ? 0 : spacing * 0.5;
+    for(let col=-cols/2; col<cols/2; col++){
+      if(idx >= CORE_CHANNELS) break;
+      const x = cx + (col * spacing + offX);
+      const y = cy + row * spacing * 0.85;
+      const dist = Math.sqrt((x-cx)**2 + (y-cy)**2);
+      if(dist > radius * 0.88) continue;
+      const ch = document.createElement('div');
+      ch.className = 'fuel-channel normal';
+      ch.id = 'channel-'+idx;
+      ch.style.left = x + 'px';
+      ch.style.top = y + 'px';
+      const sc = 0.7 + (1 - dist/radius) * 0.5;
+      ch.style.width = (16 * sc) + 'px';
+      ch.style.height = (16 * sc) + 'px';
+      G.coreHealth[idx] = 0;
+      channels.appendChild(ch);
+      idx++;
+    }
+  }
+}
+function updateCore(){
+  const tempRatio = G.temp / 1200;
+  const powerRatio = G.power / MAX_POWER;
+  const crisis = G.phase === 'crisis';
+  const postAcc = G.accidentOccurred;
+  let n=0,w=0,h=0,c=0,d=0;
+  for(let i=0; i<G.coreHealth.length; i++){
+    const ch = document.getElementById('channel-'+i);
+    if(!ch) continue;
+    const noise = Math.sin(i * 1.7 + G.seconds * 0.01) * 0.3;
+    const tf = tempRatio * 0.7 + powerRatio * 0.3 + noise;
+    let state = 0;
+    if(postAcc){const df=Math.abs(i-G.coreHealth.length/2)/(G.coreHealth.length/2);if(df<0.3)state=4;else if(df<0.5)state=tf>0.3?3:2;else state=tf>0.4?2:tf>0.2?1:0;}
+    else if(crisis){state=tf>0.6?3:tf>0.4?2:tf>0.2?1:0;}
+    else if(tf>0.5)state=2;
+    else if(tf>0.25)state=1;
+    G.coreHealth[i]=state;
+    const cls=['normal','warm','hot','critical','destroyed'];
+    ch.className='fuel-channel '+cls[state];
+    if(state===0)n++;else if(state===1)w++;else if(state===2)h++;else if(state===3)c++;else d++;
+  }
+  $('coreNormal').textContent=n;$('coreWarm').textContent=w;$('coreHot').textContent=h;$('coreCritical').textContent=c;$('coreDestroyed').textContent=d;
+}
+
+// ========== 双圆盘 ==========
+function buildSelsyn(cid, did, cnt){
+  const con=document.getElementById(cid), dots=document.getElementById(did);
+  if(!con||!dots)return;
+  dots.innerHTML='';
+  const rect=con.getBoundingClientRect();
+  const sz=Math.min(rect.width,rect.height)||180;
+  const r=sz*0.38,cx=sz/2,cy=sz/2;
+  const oc=Math.ceil(cnt*0.66),ic=cnt-oc;
+  for(let i=0;i<cnt;i++){
+    const d=document.createElement('div');d.className='selsyn-dot';d.id=did+'-d-'+i;
+    let rd,ang;
+    if(i<oc){rd=r*0.80;ang=(i/oc)*Math.PI*2-Math.PI/2;}
+    else{rd=r*0.50;ang=((i-oc)/ic)*Math.PI*2-Math.PI/2;}
+    d.style.left=(cx+rd*Math.cos(ang))+'px';d.style.top=(cy+rd*Math.sin(ang))+'px';
+    const nd=document.createElement('div');nd.className='needle';d.appendChild(nd);
+    dots.appendChild(d);
+  }
+}
+function updateSelsyn(){
+  const total=TOTAL_RODS, ratio=G.rodsIn/total;
+  const postAcc=G.accidentOccurred;
+  const upd=(did,start,cnt,sp)=>{
+    let ic=0,mc=0,oc=0,dc=0;
+    for(let i=0;i<cnt;i++){
+      const d=document.getElementById(did+'-d-'+i);if(!d)continue;
+      if(postAcc&&Math.random()>0.6){d.className='selsyn-dot destroyed';dc++;const nd=d.querySelector('.needle');if(nd)nd.className='needle';continue;}
+      const th=(start+i)/total;
+      let s;if(th<ratio-0.05){s='in';ic++;}else if(th<ratio+0.05){s='mid';mc++;}else{s='out';oc++;}
+      d.className='selsyn-dot '+s;
+      const nd=d.querySelector('.needle');if(nd)nd.className='needle '+s;
+    }
+    $(sp+'in').textContent=ic;$(sp+'mid').textContent=mc;$(sp+'out').textContent=oc;$(sp+'des').textContent=dc;
+  };
+  upd('selsynDots1',0,106,'s1');
+  upd('selsynDots2',106,105,'s2');
+  const ic=Math.round(ratio*total);
+  $('rodInCount').textContent=ic;$('rodOutCount').textContent=total-ic;
+  $('rodsInDisplay').textContent=G.rodsIn;
+  const orm=$('ormDisplay');const ov=G.rodsIn/total;
+  orm.textContent=ov>0.3?'正常':ov>0.1?'偏低':'危险!';
+  orm.style.color=ov>0.3?'#44cc44':ov>0.1?'#ffaa00':'#ff4444';
+  $('rodBar').style.width=(ov*100)+'%';
+  $('rodBar').style.background=ov>0.3?'#44cc44':ov>0.2?'#ffaa00':'#ff4444';
+}
+
+// ========== 更新仪表 + 音效联动 ==========
+function updateGauges(){
+  const p=G.power,r=G.reactivity,t=G.temp,pr=G.pressure,f=G.flow,rd=G.radiation;
+  const sg=(id,val,cls)=>{const el=$(id);if(el){el.textContent=val;el.className='gauge-value '+cls;}};
+  sg('powerDisplay',Math.round(p),p>3000?'normal':p>500?'warning':'danger');
+  sg('reactivityDisplay',(r>=0?'+':'')+r.toFixed(3),r<0.05?'normal':r<0.2?'warning':'danger');
+  sg('tempDisplay',Math.round(t),t<350?'normal':t<500?'warning':'danger');
+  sg('pressureDisplay',Math.round(pr),pr<80?'normal':pr<100?'warning':'danger');
+  sg('flowDisplay',Math.round(f),f>60?'normal':f>30?'warning':'danger');
+  sg('radiationDisplay',rd.toFixed(2),rd<1?'normal':rd<10?'warning':'danger');
+  $('xenonBar').style.width=G.xenon+'%';
+  $('xenonBar').style.background=G.xenon<30?'#555':G.xenon<60?'#ffaa00':'#ff4444';
+  $('xenonLabel').textContent=G.xenon+'%';
+  const sl=(id,on,color,lb)=>{const el=$(id);if(!el)return;el.innerHTML=`<span class="bulb ${on?'on-'+color:'off'}"></span> ${lb||''}`;};
+  sl('pumpLamp',G.pumps>=6,'green',G.pumps+'/8泵');
+  sl('turbineLamp',G.turbineOn,'green','涡轮');
+  sl('autoLamp',G.autoControl,'green','自动');
+  const ph={normal:'正常运行',test:'测试进行中',crisis:'⚠ 危机',postaccident:'☢ 事故后数据采集'};
+  $('phaseDisplay').textContent='阶段: '+(ph[G.phase]||G.phase);
+  $('testStatus').textContent=G.testRunning?'进行中':'未开始';
+  $('opCount').textContent=G.opCount;
+  $('pumpStatus').textContent=G.pumps+'/8';
+  $('turbineStatus').textContent=G.turbineOn?'运行':'停机';
+  
+  if(G.accidentOccurred){
+    G.postAccidentTime++;
+    const mins=Math.floor(G.postAccidentTime/75);
+    const secs=Math.floor((G.postAccidentTime%75)*0.8);
+    $('dataPostTime').textContent=`${String(mins).padStart(2,'0')}:${String(secs).padStart(2,'0')}`;
+    $('dataRadPeak').textContent=G.radPeak.toFixed(1)+' R/h';
+    $('dataGraphiteTemp').textContent=Math.round(G.temp)+' °C';
+    if(G.temp>800)$('dataFuelStatus').textContent='🔥 石墨燃烧中';
+    else if(G.temp>500)$('dataFuelStatus').textContent='⚠ 燃料棒熔化';
+    else $('dataFuelStatus').textContent='部分损毁';
+    $('dataCoreStatus').textContent=G.temp>800?'🔥 持续燃烧':'损毁·冷却中';
+  }
+  
+  renderAllCams();
+  updateClock(); updateCore(); updateSelsyn();
+  
+  let currentLevel = 'normal';
+  if(G.accidentOccurred) currentLevel = 'postaccident';
+  else if(G.phase === 'crisis') currentLevel = 'critical';
+  else if(G.testRunning || G.rodsIn < 80 || G.temp > 500 || G.pressure > 100) currentLevel = 'warning';
+  
+  if(currentLevel !== G.prevAlarmLevel){
+    G.prevAlarmLevel = currentLevel;
+    stopAlarmLoop();
+    stopAccidentAlarm();
+    if(currentLevel === 'postaccident') startAccidentAlarm();
+    else if(currentLevel === 'critical') startAlarmLoop();
+    else if(currentLevel === 'warning') startAlarmLoop();
+  }
+}
+
+function setAlarm(text, level='normal'){
+  const bar=$('alarmBar'),txt=$('alarmText'),sub=$('alarmSub');
+  txt.textContent=text;
+  if(level==='critical'){
+    bar.classList.add('active');sub.textContent='⚠ 需要立即干预!';
+    playCritical();
+  } else if(level==='warning'){
+    bar.classList.add('active');sub.textContent='注意观察';
+    playWarning();
+  } else {
+    bar.classList.remove('active');sub.textContent='待机中 · 无报警';
+    if(!G.accidentOccurred) stopAlarmLoop();
+  }
+}
+function resetAlarm(){if(G.gameOver)return;setAlarm('警报已确认','normal');addLog('操作员确认警报信号','system');}
+function checkGO(){return G.gameOver;}
+
+function continueMonitoring(){
+  document.getElementById('endingOverlay').style.display='none';
+  G.gameOver=false;
+  addLog('📡 继续监测模式 · 持续采集事故后数据','data');
+  addLog('📡 辐射水平: '+G.radiation.toFixed(1)+' R/h · 堆芯温度: '+Math.round(G.temp)+'°C','data');
+}
+
+function triggerAccident(){
+  if(G.accidentOccurred)return;
+  G.accidentOccurred=true;G.phase='postaccident';G.gameOver=false;
+  playExplosion();
+  stopAlarmLoop();
+  document.getElementById('accidentBanner').classList.add('active');
+  document.getElementById('dataPanel').classList.add('active');
+  G.power=0;G.rodsIn=Math.floor(Math.random()*30);G.temp=800+Math.random()*400;G.pressure=0;G.flow=0;
+  G.radiation=50+Math.random()*50;G.radPeak=G.radiation;G.graphiteFire=true;
+  addLog('☢☢☢ 爆炸发生! 4号反应堆严重损毁! ☢☢☢','critical');
+  addLog('☢ 放射性物质泄漏至大气! 辐射水平急剧上升!','critical');
+  addLog('📡 进入事故后数据采集模式','data');
+  addLog('📡 堆芯温度: '+Math.round(G.temp)+'°C · 石墨可能燃烧','data');
+  setAlarm('☢☢ 核事故已发生! ☢☢','critical');
+  
+  // 播放语音广播
+  if(!G.broadcastPlayed){
+    G.broadcastPlayed = true;
+    setTimeout(() => {
+      playAccidentBroadcast();
+    }, 1000);
+  }
+  
+  setTimeout(()=>{startAccidentAlarm();},500);
+  updateGauges();
+  showEndingScreen('explosion');
+}
+
+function showEndingScreen(type){
+  G.gameOver=true;G.endingShown=true;
+  const overlay=document.getElementById('endingOverlay');
+  const title=document.getElementById('endingTitle');
+  const content=document.getElementById('endingContent');
+  const continueBtn=document.getElementById('continueBtn');
+  overlay.style.display='flex';
+  if(type==='explosion'||type==='meltdown'||type==='radiation'){
+    title.textContent='💥 核灾难 · 蒸汽爆炸';title.style.color='#ff4444';
+    content.innerHTML=`<p style="color:#ff4444;font-size:15px;font-weight:bold">1986年4月26日 ${formatTime(G.seconds)}</p><p>4号反应堆发生蒸汽爆炸，2000吨顶盖被炸飞。<br>放射性物质大量泄漏。<br><br><b>最终状态:</b><br>功率峰值: ${Math.round(G.power)} MW<br>温度: ${Math.round(G.temp)} °C<br>辐射: ${G.radiation.toFixed(1)} mR/h<br>控制棒: ${G.rodsIn}/${TOTAL_RODS}<br>操作: ${G.opCount}次<br><br><span style="color:#ff4444">"石墨尖端插入堆芯的瞬间，反应性不降反升——<br>这个设计缺陷酿成了这场浩劫。"</span></p>`;
+    continueBtn.style.display='inline-block';playExplosion();
+  } else if(type==='success'){
+    title.textContent='✅ 任务完成 · 安全停堆';title.style.color='#44cc44';
+    content.innerHTML=`<p style="color:#44cc44;font-size:15px">你成功完成了涡轮测试并安全停堆!</p><p>控制棒: ${G.rodsIn}/${TOTAL_RODS}<br>辐射: ${G.radiation.toFixed(2)} mR/h<br>操作: ${G.opCount}次<br>时间: ${formatTime(G.seconds)}<br><br><span style="color:#44cc44">但在真实的历史中，1986年4月26日凌晨，<br>切尔诺贝利4号反应堆爆炸了。<br>历史没有如果，但我们永远不该忘记。</span></p>`;
+    continueBtn.style.display='none';playSuccess();
+  }
+}
+
+function adjPower(delta){
+  if(checkGO())return;G.opCount++;playClick();
+  if(G.accidentOccurred){addLog('⚠ 反应堆已损毁，功率调节无效','warning');return;}
+  const old=G.power;G.power=Math.max(0,Math.min(MAX_POWER,G.power+delta));
+  const act=G.power-old;
+  if(act!==0){addLog(`功率调整: ${act>0?'+':''}${Math.round(act)}MW → ${Math.round(G.power)}MW`,'info');if(G.power<700&&G.power>0){G.reactivity+=0.002;addLog('⚠ 低功率运行，反应性正反馈增强','warning');}G.neutron=(G.power/3200)*100;}
+  updateGauges();
+}
+function adjRods(count){
+  if(checkGO())return;G.opCount++;playClick();
+  if(G.accidentOccurred){addLog('⚠ 控制棒系统已损毁','warning');return;}
+  const old=G.rodsIn;G.rodsIn=Math.max(0,Math.min(TOTAL_RODS,G.rodsIn+count));
+  const act=G.rodsIn-old;
+  if(act!==0){const a=act>0?'插入':'拔出';addLog(`控制棒 ${a} ${Math.abs(act)}根 (${G.rodsIn}/${TOTAL_RODS})`,'info');G.reactivity=Math.max(0,G.reactivity-act*0.002);if(G.rodsIn<30){addLog('⚠⚠ 严重警告: 控制棒严重不足!','critical');setAlarm('控制棒严重不足!','critical');}else if(G.rodsIn<80){addLog('⚠ 警告: 控制棒数量偏低','warning');setAlarm('控制棒数量偏低','warning');}else setAlarm('系统正常','normal');}
+  updateGauges();
+}
+function adjFlow(delta){
+  if(checkGO())return;G.opCount++;playClick();
+  if(G.accidentOccurred){addLog('⚠ 冷却系统已损毁','warning');return;}
+  const old=G.flow;G.flow=Math.max(10,Math.min(100,G.flow+delta));
+  const act=G.flow-old;
+  if(act!==0){addLog(`冷却水流量 ${act>0?'+':''}${Math.round(act)}% → ${Math.round(G.flow)}%`,'info');if(G.flow<50){G.reactivity+=0.004;addLog('⚠ 冷却不足，正空泡效应增强','warning');}}
+  updateGauges();
+}
+function togglePump(n){
+  if(checkGO())return;G.opCount++;playClick();
+  if(G.accidentOccurred){addLog('⚠ 主循环泵已损毁','warning');return;}
+  if(n===1){G.pump7=!G.pump7;G.pumps=6+(G.pump7?1:0)+(G.pump8?1:0);addLog(`7号泵 ${G.pump7?'启动':'停止'} (${G.pumps}/8)`,G.pump7?'warning':'info');}
+  else if(n===2){G.pump8=!G.pump8;G.pumps=6+(G.pump7?1:0)+(G.pump8?1:0);addLog(`8号泵 ${G.pump8?'启动':'停止'} (${G.pumps}/8)`,G.pump8?'warning':'info');}
+  else if(n===-1){if(!G.pump7)return;G.pump7=false;G.pumps--;addLog(`7号泵停止 (${G.pumps}/8)`,'info');}
+  else if(n===-2){if(!G.pump8)return;G.pump8=false;G.pumps--;addLog(`8号泵停止 (${G.pumps}/8)`,'info');}
+  if(G.pumps>6&&G.power<700){G.reactivity+=0.005;addLog('⚠ 低功率下增加泵数导致正空泡效应加剧','critical');setAlarm('正空泡效应加剧!','warning');}
+  updateGauges();
+}
+function emergencyCooling(){
+  if(checkGO())return;G.opCount++;playClick();
+  if(!G.eccOn){addLog('❌ 应急冷却系统已关闭!','critical');return;}
+  if(G.accidentOccurred){G.temp=Math.max(200,G.temp-50);addLog('❄❄ 直升机空投硼砂+沙子! 堆芯温度下降','data');addLog('📡 数据: 温度 '+Math.round(G.temp)+'°C · 继续监测','data');updateGauges();return;}
+  G.flow=Math.min(100,G.flow+30);G.temp=Math.max(200,G.temp-30);
+  addLog('❄❄ 应急冷却注入! 流量+30% 温度下降','success');
+  setAlarm('应急冷却已启动','warning');
+  updateGauges();
+}
+function toggleAuto(){if(checkGO())return;G.opCount++;playClick();G.autoControl=!G.autoControl;$('autoBtn').textContent=`AUTO: ${G.autoControl?'开':'关'}`;addLog(`自动控制 ${G.autoControl?'启用':'关闭'}`,'system');updateGauges();}
+function toggleDiesel(){if(checkGO())return;G.opCount++;playClick();G.dieselOn=!G.dieselOn;$('dieselBtn').textContent=G.dieselOn?'⛁ 柴油机:运行':'⛁ 柴油发电机';$('dieselBtn').classList.toggle('success',G.dieselOn);addLog(`柴油发电机 ${G.dieselOn?'启动':'停止'}`,G.dieselOn?'success':'info');}
+function adjSteam(delta){if(checkGO())return;G.opCount++;playClick();if(G.accidentOccurred)return;G.steam=Math.max(20,Math.min(100,G.steam+delta));addLog(`蒸汽供应 ${delta>0?'+':''}${delta}% → ${Math.round(G.steam)}%`,'info');updateGauges();}
+function stopTurbine(){if(checkGO())return;G.opCount++;playClick();G.turbineOn=false;G.rpm=0;addLog('涡轮发电机已关闭','warning');updateGauges();}
+function startTurbineTest(){if(checkGO())return;G.opCount++;playClick();if(G.accidentOccurred){addLog('⚠ 反应堆已损毁','warning');return;}if(G.testRunning){addLog('测试已在进行中','warning');return;}if(G.power<700)addLog('⚠ 佳特洛夫命令: 在低功率下强行开始涡轮测试!','critical');else addLog('开始涡轮降负荷测试 ('+Math.round(G.power)+'MW)','info');G.testRunning=true;G.phase='test';setAlarm('涡轮测试进行中','warning');addLog('关闭涡轮蒸汽供应，涡轮开始惰转','warning');G.turbineOn=false;G.rpm=3000;updateGauges();}
+function pressBAZ(){if(checkGO())return;G.opCount++;playWarning();if(G.accidentOccurred)return;addLog('⚠⚠ BAZ 快速保护系统启动!','warning');setAlarm('BAZ 快速保护启动','warning');const insert=Math.min(30,TOTAL_RODS-G.rodsIn);G.rodsIn+=insert;G.reactivity=Math.max(0,G.reactivity-0.03);G.power=Math.max(0,G.power-200);addLog(`BAZ 插入 ${insert} 根控制棒`,'success');if(G.power<100)addLog('✅ 反应堆功率已降至安全水平','success');updateGauges();}
+function pressAZ5(){if(checkGO())return;G.opCount++;playAZ5();if(G.accidentOccurred)return;addLog('⚠⚠⚠ AZ-5 紧急停堆按钮被按下!','critical');setAlarm('AZ-5 紧急停堆启动!','critical');if(G.bypassOn)addLog('⚠⚠ 旁路联锁激活! AZ-5信号延迟!','critical');if(G.rodsIn<30){addLog('⚠⚠⚠ 致命缺陷: 控制棒严重不足! 石墨尖端效应失控!','critical');G.reactivity+=0.2;G.power=Math.min(MAX_POWER*3,G.power*1.6);G.temp+=50;addLog('⚠⚠⚠ 反应性飙升! 功率失控!','critical');G.phase='crisis';setTimeout(()=>{triggerAccident();},1500);}else if(G.rodsIn<80){addLog('⚠ 控制棒数量偏低，AZ-5效果受限','warning');G.rodsIn=Math.min(TOTAL_RODS,G.rodsIn+30);G.power=Math.max(0,G.power-300);G.reactivity=Math.max(0,G.reactivity-0.03);}else{G.rodsIn=Math.min(TOTAL_RODS,G.rodsIn+50);G.power=Math.max(0,G.power-500);G.reactivity=Math.max(0,G.reactivity-0.06);addLog('控制棒插入中，功率下降','info');if(G.power<100){addLog('✅ 反应堆成功停堆','success');setAlarm('反应堆已安全停堆','normal');G.phase='normal';G.testRunning=false;}}
+  updateGauges();
+}
+function toggleECC(){if(checkGO())return;G.opCount++;playClick();G.eccOn=!G.eccOn;$('eccToggle').classList.toggle('on',G.eccOn);addLog(`ECC 应急堆芯冷却 ${G.eccOn?'已启用':'已关闭!'}`,G.eccOn?'system':'critical');if(!G.eccOn)addLog('⚠⚠ 严重: 应急冷却系统被禁用!','critical');}
+function toggleLAR(){if(checkGO())return;G.opCount++;playClick();G.larOn=!G.larOn;$('larToggle').classList.toggle('on',G.larOn);addLog(`LAR 局部自动调节 ${G.larOn?'已启用':'已关闭'}`,G.larOn?'system':'warning');}
+function toggleBypass(){if(checkGO())return;G.opCount++;playClick();G.bypassOn=!G.bypassOn;$('bypassToggle').classList.toggle('on',G.bypassOn);addLog(`AZ-5 旁路联锁 ${G.bypassOn?'已激活 (危险!)':'已解除'}`,G.bypassOn?'critical':'system');if(G.bypassOn)addLog('⚠⚠ 安全联锁被绕过! AZ-5可能无法正常工作!','critical');}
+function toggleAPS(){if(checkGO())return;G.opCount++;playClick();G.apsOn=!G.apsOn;$('apsToggle').classList.toggle('on',G.apsOn);addLog(`APS 自动保护系统 ${G.apsOn?'已启用':'已关闭!'}`,G.apsOn?'system':'critical');if(!G.apsOn)addLog('⚠⚠ 自动保护系统被禁用! 反应堆失去最后一道防线!','critical');}
+function selectSKALA(prog){playClick();const d=$('skalaDisplay');if(G.accidentOccurred){const msgs={PRIZMA:'PRIZMA: 系统严重损毁 · 数据不可靠 · 85%传感器离线',DREG:'DREG: 最后记录 01:23:44 · 功率峰值33000MW · 记录终止',KRV:'KRV: 冷却回路A/B 全部中断 · 流量为零'};d.textContent=msgs[prog]||'系统离线';addLog(`SKALA 查询: ${prog} · 事故后数据`,'data');return;}const msgs={PRIZMA:'PRIZMA: 功率分布正常 · 无异常燃料通道 · 中子通量均匀',DREG:'DREG: 参数记录中 · 最近5分钟无异常事件 · 氙浓度上升中',KRV:'KRV: 冷却剂流量监测 · 回路A正常 · 回路B正常 · 无阻塞'};d.textContent=msgs[prog]||'查询中...';addLog(`SKALA 查询: ${prog}`,'system');}
+function setPowerTarget(target){if(checkGO())return;playClick();const diff=target-G.power;adjPower(diff);addLog(`功率目标设定: ${target}MW`,'info');}
+function fullInsert(){if(checkGO())return;playClick();if(G.accidentOccurred)return;const cnt=TOTAL_RODS-G.rodsIn;if(cnt>0){adjRods(cnt);addLog('全部控制棒插入堆芯','success');}}
+function fullExtract(){if(checkGO())return;playWarning();if(G.accidentOccurred)return;addLog('⚠ 警告: 全部拔出控制棒极度危险!','critical');const cnt=G.rodsIn;if(cnt>0){adjRods(-cnt);addLog('⚠⚠ 所有控制棒已拔出! 反应堆失去控制!','critical');}}
+
+// ========== 主循环 ==========
+function gameTick(){
+  if(G.gameOver&&!G.accidentOccurred) return;
+  G.seconds++;
+  if(G.accidentOccurred){
+    G.temp=Math.max(100,G.temp-0.5+Math.random()*2);
+    G.radiation=Math.max(0.1,G.radiation-0.02+Math.random()*0.05);
+    if(G.radiation>G.radPeak)G.radPeak=G.radiation;
+    if(G.temp>600&&!G.graphiteFire){G.graphiteFire=true;addLog('🔥 石墨燃烧! 产生大量放射性烟雾','critical');}
+    if(G.temp<400&&G.graphiteFire){G.graphiteFire=false;addLog('✅ 石墨火势得到控制','success');}
+    if(G.seconds%30===0){const readings=['📡 辐射读数: '+G.radiation.toFixed(1)+' R/h · 堆芯温度: '+Math.round(G.temp)+'°C','📡 直升机空投硼砂中 · 堆芯状态: '+(G.temp>600?'燃烧中':'冷却中'),'📡 清理人员已就位 · 辐射水平仍高于安全值','📡 建议: 持续监测堆芯温度 · 防止二次临界'];addLog(readings[Math.floor(Math.random()*readings.length)],'data');}
+    updateGauges();return;
+  }
+  if(G.power<500&&G.power>0)G.xenon=Math.min(100,G.xenon+0.4);else if(G.power>1000)G.xenon=Math.max(0,G.xenon-0.3);
+  const xe=G.xenon*0.0003;let ve=0;
+  if(G.flow<60&&G.power>100)ve=(60-G.flow)*0.0004;
+  if(G.power<700&&G.power>0)ve+=0.002;
+  if(G.pumps>6&&G.power<700)ve+=0.003;
+  const re=(TOTAL_RODS-G.rodsIn)*0.00015;
+  G.reactivity=Math.max(0,re+ve-xe+0.008);
+  if(G.reactivity>0.01)G.power=Math.min(MAX_POWER,G.power+G.power*G.reactivity*0.04);else G.power=Math.max(0,G.power-3);
+  G.temp=285+(G.power/3200)*200+G.reactivity*400;
+  G.pressure=68+(G.power/3200)*30+G.reactivity*80;
+  G.neutron=(G.power/3200)*100;
+  if(G.temp>600||G.pressure>120)G.radiation+=0.03;
+  if(G.phase==='crisis')G.radiation+=0.3;
+  if(G.testRunning&&!G.turbineOn){
+    G.rpm=Math.max(0,G.rpm-15);G.flow=Math.max(20,G.flow-0.4);
+    if(G.seconds%5===0)addLog(`涡轮惰转中... ${Math.round(G.rpm)}rpm 流量${Math.round(G.flow)}%`,'warning');
+    if(G.power<700&&G.rodsIn<50&&G.flow<50&&G.xenon>40&&!G.crisisTriggered){G.crisisTriggered=true;addLog('⚠⚠⚠ 灾难性正反馈循环启动! 正空泡效应失控!','critical');setAlarm('⚠⚠ 堆芯失控! 功率异常飙升!','critical');G.phase='crisis';}
+  }
+  if(G.autoControl&&!G.testRunning&&G.phase==='normal'){
+    if(G.power>3000&&G.rodsIn<200)G.rodsIn=Math.min(TOTAL_RODS,G.rodsIn+1);
+    else if(G.power<1500&&G.rodsIn>100)G.rodsIn=Math.max(0,G.rodsIn-1);
+    if(G.flow<70)G.flow=Math.min(100,G.flow+0.5);
+  }
+  if(G.phase==='crisis'){G.power=Math.min(MAX_POWER*3,G.power*1.06);G.temp+=15;G.pressure+=4;G.radiation+=0.4;if(G.power>5000){triggerAccident();return;}if(G.temp>800)addLog('⚠⚠ 燃料棒开始熔化!','critical');if(G.pressure>150)addLog('⚠⚠ 蒸汽压力超过设计极限!','critical');}
+  if(G.temp>1200){triggerAccident();return;}
+  if(G.radiation>100){triggerAccident();return;}
+  if(G.testRunning&&G.power<50&&G.rodsIn>150){addLog('✅ 涡轮测试完成! 反应堆安全停堆','success');setAlarm('测试完成 · 反应堆已停堆','normal');G.testRunning=false;G.phase='normal';showEndingScreen('success');}
+  if(G.seconds%40===0&&!G.testRunning&&G.phase==='normal'){const evts=[()=>addLog('托图诺夫检查堆芯状态','system'),()=>addLog('阿基莫夫记录运行参数','system'),()=>addLog('佳特洛夫在控制室巡视','system')];evts[Math.floor(Math.random()*evts.length)]();}
+  const dot=$('statusDot'),txt=$('statusText');
+  if(G.phase==='crisis'){dot.className='dot red';txt.textContent='⚠ 危机!';}else if(G.testRunning){dot.className='dot yellow';txt.textContent='测试中';}else{dot.className='dot green';txt.textContent='系统在线';}
+  updateGauges();
+}
+
+function resetGame(){
+  stopAlarmLoop();stopAccidentAlarm();
+  if(speechSynth) speechSynth.cancel();
+  Object.assign(G,{power:3200,reactivity:0.02,temp:285,pressure:68,flow:100,radiation:0.02,rodsIn:169,xenon:5,pumps:6,turbineOn:true,autoControl:true,testRunning:false,seconds:0,gameOver:false,phase:'normal',crisisTriggered:false,pump7:false,pump8:false,neutron:82,drumLevel:120,rpm:3000,steam:100,dieselOn:false,eccOn:true,larOn:true,bypassOn:false,apsOn:true,opCount:0,prevAlarmLevel:'normal',accidentOccurred:false,postAccidentTime:0,radPeak:0,graphiteFire:false,endingShown:false,broadcastPlayed:false});
+  document.getElementById('accidentBanner').classList.remove('active');
+  document.getElementById('dataPanel').classList.remove('active');
+  $('endingOverlay').style.display='none';
+  $('autoBtn').textContent='AUTO: 开';
+  $('dieselBtn').textContent='⛁ 柴油发电机';
+  $('dieselBtn').classList.remove('success');
+  $('eccToggle').classList.add('on');$('larToggle').classList.add('on');
+  $('bypassToggle').classList.remove('on');$('apsToggle').classList.add('on');
+  setAlarm('系统正常','normal');
+  logArea.innerHTML='';
+  addLog('系统启动完成 · 4号机组运行正常','system');
+  addLog('值班组: 佳特洛夫(副总工) 阿基莫夫(组长) 托图诺夫(操作员)','system');
+  addLog('今日任务: 涡轮发电机降负荷测试 (已逾期2年)','system');
+  addLog('注意: RBMK-1000在低功率下存在正空泡效应风险','system');
+  updateGauges();
+}
+
+let gameInterval;
+function startGame(){
+  initAudio();
+  initSpeech();
+  // 预加载语音
+  if(speechSynth){
+    const dummy = new SpeechSynthesisUtterance(' ');
+    speechSynth.speak(dummy);
+  }
+  setVolume(70);
+  document.getElementById('volSlider').value = 70;
+  resetGame();
+  if(gameInterval)clearInterval(gameInterval);
+  setTimeout(()=>{buildCore();buildSelsyn('selsynContainer1','selsynDots1',106);buildSelsyn('selsynContainer2','selsynDots2',105);updateGauges();},100);
+  gameInterval=setInterval(gameTick,800);
+}
+window.onload=startGame;
+window.addEventListener('resize',()=>{if(!G.gameOver){buildCore();buildSelsyn('selsynContainer1','selsynDots1',106);buildSelsyn('selsynContainer2','selsynDots2',105);updateGauges();}});
+</script>
+</body>
+</html>
