@@ -3,500 +3,674 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SUPER CRAWLER X · 超级爬虫</title>
+<title>NeuraLab - AI 模型训练控制台（真实训练）</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.17.0/dist/tf.min.js"></script>
 <style>
-:root{
-  --bg:#070b10;--panel:#0e1520;--panel2:#131c2a;--line:#1d2a3c;--line2:#2b3e58;
-  --txt:#cfe0ee;--dim:#5f7590;--acc:#00e676;--acc2:#39c5ff;--warn:#ffb74d;--err:#ff5c6c;--mag:#e05cff;
-  --mono:'Cascadia Code','Consolas','Courier New',monospace;
-}
-*{box-sizing:border-box;margin:0;padding:0}
-html,body{background:var(--bg);color:var(--txt);font-family:var(--mono);font-size:14px}
-a{color:var(--acc2);text-decoration:none;word-break:break-all}
-a:hover{text-decoration:underline}
-button{font-family:var(--mono);cursor:pointer}
-::selection{background:var(--acc);color:#000}
-.wrap{max-width:1280px;margin:0 auto;padding:0 16px 60px}
-header{border-bottom:1px solid var(--line);background:repeating-linear-gradient(0deg,transparent 0 3px,rgba(0,230,118,.012) 3px 4px)}
-.hd{max-width:1280px;margin:0 auto;padding:16px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
-.logo{font-size:22px;letter-spacing:2px;color:var(--acc);text-shadow:0 0 14px rgba(0,230,118,.5)}
-.logo b{color:var(--txt)}
-.sub{color:var(--dim);font-size:12px}
-.pill{margin-left:auto;font-size:12px;color:var(--dim);border:1px solid var(--line2);padding:4px 10px;border-radius:4px;background:var(--panel)}
-.pill i{color:var(--acc);font-style:normal}
-.searchbar{display:flex;gap:8px;margin:18px 0 10px;flex-wrap:wrap}
-.searchbar input{flex:1;min-width:300px;background:var(--panel);border:1px solid var(--line2);color:var(--txt);
-  font-family:var(--mono);font-size:14px;padding:12px 14px;border-radius:6px;outline:none}
-.searchbar input:focus{border-color:var(--acc);box-shadow:0 0 0 1px rgba(0,230,118,.25)}
-.btn{background:var(--panel2);border:1px solid var(--line2);color:var(--txt);padding:11px 16px;border-radius:6px;font-size:13px;transition:.15s}
-.btn:hover{border-color:var(--acc);color:var(--acc)}
-.btn.primary{background:var(--acc);color:#001a0c;border-color:var(--acc);font-weight:bold}
-.btn.primary:hover{filter:brightness(1.15)}
-.btn:disabled{opacity:.45;cursor:not-allowed}
-.quick{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;font-size:12px}
-.chip{border:1px solid var(--line2);background:var(--panel);color:var(--dim);padding:5px 10px;border-radius:20px;cursor:pointer}
-.chip:hover{color:var(--acc2);border-color:var(--acc2)}
-.stats{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0 12px}
-.stat{border:1px solid var(--line);background:var(--panel);padding:8px 14px;border-radius:6px;font-size:12px;color:var(--dim);cursor:pointer}
-.stat b{color:var(--txt);font-size:15px;margin-right:6px}
-.stat.on{border-color:var(--acc);color:var(--acc)}
-.stat.on b{color:var(--acc)}
-.list{display:flex;flex-direction:column;gap:8px;margin-top:8px}
-.item{display:flex;align-items:center;gap:10px;background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:10px 12px;flex-wrap:wrap}
-.item:hover{border-color:var(--line2)}
-.badge{font-size:11px;padding:3px 8px;border-radius:4px;font-weight:bold;letter-spacing:1px;flex-shrink:0}
-.b-video{background:rgba(224,92,255,.15);color:var(--mag);border:1px solid rgba(224,92,255,.4)}
-.b-audio{background:rgba(57,197,255,.12);color:var(--acc2);border:1px solid rgba(57,197,255,.4)}
-.b-image{background:rgba(0,230,118,.12);color:var(--acc);border:1px solid rgba(0,230,118,.4)}
-.b-doc{background:rgba(255,183,77,.12);color:var(--warn);border:1px solid rgba(255,183,77,.4)}
-.b-page{background:rgba(160,160,160,.12);color:#aaa;border:1px solid #444}
-.b-script{background:rgba(255,92,108,.12);color:var(--err);border:1px solid rgba(255,92,108,.4)}
-.iurl{flex:1;min-width:260px;font-size:12px;color:var(--txt);word-break:break-all}
-.isize{font-size:11px;color:var(--dim);flex-shrink:0}
-.ibtns{display:flex;gap:6px;flex-shrink:0}
-.btn.sm{padding:6px 12px;font-size:12px;border-radius:4px}
-.btn.dl{background:rgba(0,230,118,.12);border-color:rgba(0,230,118,.4);color:var(--acc)}
-.btn.dl:hover{background:rgba(0,230,118,.25)}
-#log{margin-top:18px;background:#05080c;border:1px solid var(--line);border-radius:6px;padding:12px;height:220px;overflow-y:auto;font-size:12px;line-height:1.7}
-#log div{white-space:pre-wrap;word-break:break-all}
-.l-ok{color:var(--acc)}.l-err{color:var(--err)}.l-warn{color:var(--warn)}.l-dim{color:var(--dim)}.l-info{color:var(--acc2)}
-.empty{padding:40px;text-align:center;color:var(--dim);font-size:13px;border:1px dashed var(--line2);border-radius:6px}
-.prog{position:fixed;bottom:0;left:0;right:0;background:var(--panel);border-top:1px solid var(--line2);padding:10px 16px;display:none;z-index:99}
-.prog.show{display:block}
-.prog .bar{height:6px;background:var(--line);border-radius:3px;overflow:hidden;margin-top:8px}
-.prog .fill{height:100%;background:var(--acc);width:0%;transition:width .2s}
-.prog .txt{font-size:12px;color:var(--dim)}
-footer{margin-top:26px;color:var(--dim);font-size:11px;text-align:center;line-height:1.8}
-.modal{position:fixed;inset:0;background:rgba(0,0,0,.75);display:none;align-items:center;justify-content:center;z-index:100}
-.modal.show{display:flex}
-.mbox{background:var(--panel);border:1px solid var(--line2);border-radius:8px;padding:18px;width:min(860px,94vw);max-height:88vh;overflow:auto}
-.mbox h3{font-size:14px;margin-bottom:10px;color:var(--acc)}
-.mbox pre{font-size:11px;white-space:pre-wrap;word-break:break-all;color:var(--txt);background:#05080c;padding:12px;border-radius:6px;max-height:60vh;overflow:auto}
-.mrow{display:flex;gap:8px;justify-content:flex-end;margin-top:12px}
+  :root{
+    --bg:#0d1117; --panel:#161b22; --panel2:#1c2128; --border:#2d333b;
+    --text:#adbac7; --text-dim:#768390; --accent:#539bf5; --green:#57ab5a;
+    --red:#e5534b; --yellow:#c69026; --purple:#b083f0; --cyan:#39c5cf;
+  }
+  *{scrollbar-width:thin;scrollbar-color:#2d333b transparent}
+  ::-webkit-scrollbar{width:8px;height:8px}
+  ::-webkit-scrollbar-thumb{background:#2d333b;border-radius:4px}
+  body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,sans-serif}
+  .mono{font-family:'Cascadia Code','JetBrains Mono',Consolas,monospace}
+  .panel{background:var(--panel);border:1px solid var(--border);border-radius:8px}
+  .panel-hd{border-bottom:1px solid var(--border);padding:10px 14px;display:flex;align-items:center;justify-content:space-between}
+  .panel-title{font-size:13px;font-weight:600;color:#cdd9e5;letter-spacing:.3px}
+  .nav-item{display:flex;align-items:center;gap:10px;padding:9px 14px;border-radius:6px;cursor:pointer;font-size:13px;color:var(--text-dim);transition:.15s;border-left:2px solid transparent}
+  .nav-item:hover{background:var(--panel2);color:var(--text)}
+  .nav-item.active{background:var(--panel2);color:var(--accent);border-left-color:var(--accent)}
+  .btn{display:inline-flex;align-items:center;gap:6px;padding:7px 16px;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;transition:.15s;border:1px solid transparent;user-select:none}
+  .btn:disabled{opacity:.4;cursor:not-allowed}
+  .btn-primary{background:var(--accent);color:#fff}
+  .btn-primary:hover:not(:disabled){background:#6caff8}
+  .btn-green{background:var(--green);color:#fff}
+  .btn-green:hover:not(:disabled){background:#6bc46d}
+  .btn-red{background:transparent;border-color:var(--red);color:var(--red)}
+  .btn-red:hover:not(:disabled){background:rgba(229,83,75,.12)}
+  .btn-yellow{background:transparent;border-color:var(--yellow);color:var(--yellow)}
+  .btn-yellow:hover:not(:disabled){background:rgba(198,144,38,.12)}
+  .btn-ghost{background:var(--panel2);border-color:var(--border);color:var(--text)}
+  .btn-ghost:hover:not(:disabled){border-color:#444c56;color:#cdd9e5}
+  .sel,input[type=number]{background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:13px;padding:7px 10px;outline:none;transition:.15s;width:100%}
+  .sel:focus,input[type=number]:focus{border-color:var(--accent)}
+  .stat-card{padding:14px 16px}
+  .stat-label{font-size:12px;color:var(--text-dim)}
+  .stat-value{font-size:24px;font-weight:700;color:#cdd9e5;margin-top:2px}
+  .badge{display:inline-block;padding:2px 9px;border-radius:99px;font-size:11px;font-weight:600}
+  .b-run{background:rgba(87,171,90,.15);color:var(--green)}
+  .b-stop{background:rgba(118,131,144,.18);color:var(--text-dim)}
+  .b-pause{background:rgba(198,144,38,.15);color:var(--yellow)}
+  .b-done{background:rgba(83,155,245,.15);color:var(--accent)}
+  .b-fail{background:rgba(229,83,75,.15);color:var(--red)}
+  .term{background:#0a0d12;border:1px solid var(--border);border-radius:8px;display:flex;flex-direction:column}
+  .term-body{flex:1;overflow-y:auto;padding:10px 14px;font-size:12.5px;line-height:1.7;min-height:160px;max-height:230px}
+  .t-dim{color:var(--text-dim)} .t-green{color:var(--green)} .t-red{color:var(--red)}
+  .t-yellow{color:var(--yellow)} .t-blue{color:var(--accent)} .t-purple{color:var(--purple)} .t-cyan{color:var(--cyan)}
+  .term-input{display:flex;align-items:center;gap:8px;border-top:1px solid var(--border);padding:8px 14px}
+  .term-input input{flex:1;background:transparent;border:none;outline:none;color:#cdd9e5;font-size:13px}
+  .pulse{animation:pulse 1.4s ease-in-out infinite}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+  .dot{width:8px;height:8px;border-radius:50%;display:inline-block}
+  table{border-collapse:collapse;width:100%}
+  th{font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--text-dim);text-align:left;padding:8px 14px;border-bottom:1px solid var(--border)}
+  td{font-size:13px;padding:10px 14px;border-bottom:1px solid #21262d}
+  tr:hover td{background:var(--panel2)}
+  .progress{height:6px;background:#21262d;border-radius:3px;overflow:hidden}
+  .progress>div{height:100%;background:var(--accent);border-radius:3px;transition:width .3s}
+  .slider{-webkit-appearance:none;width:100%;height:4px;background:#21262d;border-radius:2px;outline:none}
+  .slider::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:var(--accent);cursor:pointer}
+  .fadein{animation:fi .35s ease}
+  @keyframes fi{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  #boundary{width:100%;border-radius:6px;background:#0a0d12}
 </style>
 </head>
-<body>
-<header><div class="hd">
-  <div class="logo">SUPER CRAWLER <b>X</b></div>
-  <div class="sub">全要素采集 · 视频/音频/图片/文档/链接 · 自动挖直链 · 免找原链</div>
-  <div class="pill">引擎<i>●</i> multi-channel</div>
-</div></header>
+<body class="h-screen flex flex-col overflow-hidden">
 
-<div class="wrap">
-  <div class="searchbar">
-    <input id="url" placeholder="输入任意网页地址（视频页/文章页/下载页均可）回车开始抓取" spellcheck="false">
-    <button class="btn primary" id="go" onclick="crawl()">⚡ 开始抓取</button>
-    <button class="btn" onclick="extractDoc()">📄 正文/文档模式</button>
-    <button class="btn" onclick="clearAll()">清空</button>
+<!-- ===== 顶栏 ===== -->
+<header class="flex items-center justify-between px-5 h-14 border-b border-[#2d333b] bg-[#161b22] shrink-0">
+  <div class="flex items-center gap-3">
+    <div class="w-8 h-8 rounded-lg flex items-center justify-center font-bold text-white text-sm" style="background:linear-gradient(135deg,#539bf5,#b083f0)">N</div>
+    <span class="font-semibold text-[#cdd9e5]">NeuraLab <span class="text-[#768390] font-normal">/ AI 训练控制台</span></span>
+    <span class="badge b-done ml-2">TensorFlow.js 真实训练</span>
   </div>
-  <div class="quick">
-    <span class="chip" onclick="quick('https://www.bilibili.com')">示例: B站主站</span>
-    <span class="chip" style="color:var(--warn);border-color:var(--warn)" onclick="biliHelper()">📌 B站视频专用通道（风控绕行）</span>
-    <span class="chip" onclick="document.getElementById('url').focus()">提示: 粘贴 直链##ref=来源页 可直接下载</span>
+  <div class="flex items-center gap-4">
+    <div class="flex items-center gap-2 text-xs">
+      <span class="dot bg-[#57ab5a] pulse"></span>
+      <span class="text-[#768390]" id="backendTxt">后端初始化中...</span>
+    </div>
+    <div class="w-px h-5 bg-[#2d333b]"></div>
+    <div class="flex items-center gap-2">
+      <div class="w-7 h-7 rounded-full bg-[#b083f0] flex items-center justify-center text-xs font-bold text-white">我</div>
+      <span class="text-xs text-[#adbac7]">admin</span>
+    </div>
   </div>
+</header>
 
-  <div class="stats" id="stats"></div>
-  <div class="list" id="list"><div class="empty">等待任务 — 输入网址回车，自动抓取并挖出页面内全部媒体直链（视频/音频/图片/文档），点下载直接保存，无需手动找链接</div></div>
+<div class="flex flex-1 overflow-hidden">
+  <!-- ===== 侧边栏 ===== -->
+  <aside class="w-52 shrink-0 border-r border-[#2d333b] bg-[#161b22] p-3 flex flex-col gap-1">
+    <div class="text-[11px] uppercase tracking-wider text-[#768390] px-3 pb-2">工作台</div>
+    <div class="nav-item active" data-view="dashboard"><span>&#9635;</span> 训练面板</div>
+    <div class="nav-item" data-view="tasks"><span>&#9776;</span> 训练任务 <span id="taskCount" class="ml-auto text-[10px] bg-[#1c2128] px-1.5 py-0.5 rounded">0</span></div>
+    <div class="nav-item" data-view="datasets"><span>&#9881;</span> 数据集</div>
+    <div class="nav-item" data-view="terminal"><span>&#9000;</span> 终端</div>
+    <div class="mt-auto panel p-3 text-xs text-[#768390]">
+      <div class="flex justify-between mb-1"><span>张量内存</span><span class="mono" id="memTxt">0 MB</span></div>
+      <div class="progress"><div id="memBar" style="width:2%"></div></div>
+      <div class="mt-2">活跃张量数：<span class="mono" id="tensorCnt">0</span></div>
+    </div>
+  </aside>
 
-  <div id="log"></div>
+  <!-- ===== 主区域 ===== -->
+  <main class="flex-1 overflow-y-auto p-5 space-y-5">
 
-  <footer>
-    抓取通道：CloudBase 云函数(raw) → Cloudflare Worker(自建) → 直连 → 公共代理（自动降级）<br>
-    视频支持 mp4/webm/flv 直链与 m3u8(HLS) 自动合并（含AES-128解密）· 大文件 Range 分块 · 防盗链 Referer 伪装<br>
-    仅限抓取你有权访问的内容 · 强DRM站点(Netflix等)不支持
-  </footer>
+    <!-- 视图：训练面板 -->
+    <section id="view-dashboard" class="space-y-5 fadein">
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div class="panel stat-card">
+          <div class="stat-label">训练状态</div>
+          <div class="stat-value" id="stStatus" style="font-size:18px;color:var(--text-dim)">空闲</div>
+          <div class="text-xs text-[#768390] mt-2 mono" id="stEpoch">epoch -- / --</div>
+        </div>
+        <div class="panel stat-card">
+          <div class="stat-label">当前 Loss</div>
+          <div class="stat-value mono text-[#e5534b]" id="stLoss">--</div>
+          <div class="text-xs text-[#768390] mt-2">交叉熵 / MSE</div>
+        </div>
+        <div class="panel stat-card">
+          <div class="stat-label">当前指标</div>
+          <div class="stat-value mono text-[#539bf5]" id="stAcc">--</div>
+          <div class="text-xs text-[#768390] mt-2" id="stAccName">训练集准确率</div>
+        </div>
+        <div class="panel stat-card">
+          <div class="stat-label">训练速度</div>
+          <div class="stat-value mono text-[#57ab5a]" id="stSpeed">--</div>
+          <div class="text-xs text-[#768390] mt-2">epoch / 秒</div>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 xl:grid-cols-3 gap-5">
+        <!-- 训练配置 -->
+        <div class="panel">
+          <div class="panel-hd"><span class="panel-title">新建训练任务</span><span class="badge b-done">真实反向传播</span></div>
+          <div class="p-4 space-y-4">
+            <div>
+              <label class="text-xs text-[#768390] block mb-1">数据集</label>
+              <select id="cfgData" class="sel">
+                <option value="spiral">螺旋分类（2类 / 400样本）</option>
+                <option value="moons">双月分类（2类 / 400样本）</option>
+                <option value="xor">XOR 分类（2类 / 400样本）</option>
+                <option value="sine">正弦回归（拟合 sin 曲线）</option>
+                <option value="csv">上传 CSV（最后一列为标签）</option>
+              </select>
+              <input type="file" id="csvFile" accept=".csv" class="hidden">
+              <div id="csvRow" class="hidden mt-2 flex items-center gap-2">
+                <button class="btn btn-ghost text-xs flex-1" id="btnCsv">选择 CSV 文件</button>
+                <span class="text-[10px] text-[#768390]" id="csvName">未选择</span>
+              </div>
+            </div>
+            <div>
+              <label class="text-xs text-[#768390] flex justify-between mb-1"><span>隐藏层规模</span><span class="mono text-[#539bf5]" id="archVal">16 x 16</span></label>
+              <input type="range" class="slider" id="cfgHidden" min="1" max="5" step="1" value="3">
+              <div class="flex justify-between text-[10px] text-[#768390] mt-1"><span>4</span><span>64 x 3层</span></div>
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="text-xs text-[#768390] block mb-1">Epochs</label>
+                <input type="number" id="cfgEpochs" value="80" min="1" max="2000">
+              </div>
+              <div>
+                <label class="text-xs text-[#768390] block mb-1">Batch Size</label>
+                <select id="cfgBatch" class="sel"><option>8</option><option>16</option><option selected>32</option><option>64</option></select>
+              </div>
+            </div>
+            <div>
+              <label class="text-xs text-[#768390] flex justify-between mb-1"><span>学习率</span><span class="mono text-[#539bf5]" id="lrVal">1e-2</span></label>
+              <input type="range" class="slider" id="cfgLr" min="-4" max="-1" step="1" value="-2">
+              <div class="flex justify-between text-[10px] text-[#768390] mt-1"><span>1e-4</span><span>1e-1</span></div>
+            </div>
+            <div>
+              <label class="text-xs text-[#768390] block mb-1">优化器</label>
+              <div class="flex gap-2" id="optGroup">
+                <button class="btn btn-ghost flex-1 opt-btn !py-1.5" data-opt="sgd">SGD</button>
+                <button class="btn btn-primary flex-1 opt-btn !py-1.5" data-opt="adam">Adam</button>
+                <button class="btn btn-ghost flex-1 opt-btn !py-1.5" data-opt="adamw">AdamW</button>
+              </div>
+            </div>
+            <div class="flex gap-2 pt-1">
+              <button class="btn btn-green flex-1" id="btnStart">&#9654; 开始训练</button>
+              <button class="btn btn-yellow" id="btnPause" disabled>&#10073;&#10073; 暂停</button>
+              <button class="btn btn-red" id="btnStop" disabled>&#9632; 停止</button>
+            </div>
+            <button class="btn btn-ghost w-full text-xs" id="btnExportModel" disabled>&#11015; 导出训练好的模型（JSON + 权重）</button>
+          </div>
+        </div>
+
+        <!-- 训练曲线 + 决策边界 -->
+        <div class="panel xl:col-span-2">
+          <div class="panel-hd">
+            <span class="panel-title">训练曲线 <span id="chartTaskName" class="text-[#768390] font-normal text-xs"></span></span>
+            <div class="flex gap-2">
+              <button class="btn btn-ghost !py-1 !px-3 text-xs" id="btnZoomLoss">Loss</button>
+              <button class="btn btn-ghost !py-1 !px-3 text-xs" id="btnZoomAcc">指标</button>
+              <button class="btn btn-ghost !py-1 !px-3 text-xs" id="btnExport">导出 PNG</button>
+            </div>
+          </div>
+          <div class="grid grid-cols-1 lg:grid-cols-5 gap-3 p-3">
+            <div id="chart" class="lg:col-span-3" style="width:100%;height:320px"></div>
+            <div class="lg:col-span-2">
+              <div class="text-xs text-[#768390] mb-1 flex justify-between"><span id="vizTitle">决策边界（实时）</span><span class="mono" id="vizInfo"></span></div>
+              <canvas id="boundary" width="360" height="300"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 日志 + 终端 -->
+      <div class="term">
+        <div class="panel-hd !border-b" style="border-color:var(--border)">
+          <span class="panel-title">日志 / 命令行终端</span>
+          <span class="text-[10px] text-[#768390] mono">输入 help 查看可用命令</span>
+        </div>
+        <div class="term-body mono" id="termBody"></div>
+        <div class="term-input mono">
+          <span class="t-green">admin@neuralab</span><span class="t-dim">:~$</span>
+          <input id="termInput" placeholder="输入命令，如: train --epochs 100 --lr 0.01" autocomplete="off" spellcheck="false">
+        </div>
+      </div>
+    </section>
+
+    <!-- 视图：任务列表 -->
+    <section id="view-tasks" class="hidden space-y-4 fadein">
+      <div class="flex items-center justify-between">
+        <h2 class="text-lg font-semibold text-[#cdd9e5]">训练任务</h2>
+        <button class="btn btn-ghost text-xs" id="btnRefreshTasks">刷新</button>
+      </div>
+      <div class="panel overflow-hidden">
+        <table>
+          <thead><tr><th>任务 ID</th><th>数据集</th><th>网络结构</th><th>进度</th><th>最终指标</th><th>状态</th></tr></thead>
+          <tbody id="taskTable"></tbody>
+        </table>
+        <div id="taskEmpty" class="p-10 text-center text-sm text-[#768390]">暂无任务，回到「训练面板」点击「开始训练」创建第一个真实训练任务。</div>
+      </div>
+    </section>
+
+    <!-- 视图：数据集 -->
+    <section id="view-datasets" class="hidden space-y-4 fadein">
+      <h2 class="text-lg font-semibold text-[#cdd9e5]">数据集</h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4" id="datasetGrid"></div>
+      <div class="panel p-4 text-xs text-[#768390] leading-relaxed">
+        <span class="text-[#cdd9e5] font-semibold">CSV 格式说明：</span>每行一个样本，逗号分隔，最后一列为标签。
+        分类任务标签用 0/1，回归任务标签为数值。示例：<span class="mono text-[#539bf5]">0.12,-0.85,1</span>。
+        所有数据仅在你的浏览器本地处理，不会上传。
+      </div>
+    </section>
+
+    <!-- 视图：终端 -->
+    <section id="view-terminal" class="hidden fadein">
+      <div class="term" style="height:calc(100vh - 140px)">
+        <div class="panel-hd"><span class="panel-title">全屏终端</span><span class="text-[10px] text-[#768390] mono">help 查看命令</span></div>
+        <div class="term-body mono !max-h-none" id="termBody2" style="flex:1"></div>
+        <div class="term-input mono">
+          <span class="t-green">admin@neuralab</span><span class="t-dim">:~$</span>
+          <input id="termInput2" placeholder="输入命令..." autocomplete="off" spellcheck="false">
+        </div>
+      </div>
+    </section>
+
+  </main>
 </div>
 
-<div class="prog" id="prog"><div class="txt" id="progTxt"></div><div class="bar"><div class="fill" id="progFill"></div></div></div>
-<div class="modal" id="modal"><div class="mbox"><h3 id="mTitle"></h3><pre id="mBody"></pre><div class="mrow"><button class="btn" onclick="closeModal()">关闭</button><button class="btn dl" id="mSave" onclick="saveModal()">💾 保存为文件</button></div></div></div>
-
 <script>
-/* ============ 配置 ============ */
-const TCB = 'https://chernobyl-sim-d3gaxavw3e2df91ea-1492568300.ap-shanghai.app.tcloudbase.com/fetchpage';
-const CF_W = 'https://scx-proxy.allen00102.workers.dev';
-const PROXIES = [
-  u => TCB + '?url=' + encodeURIComponent(u) + '&raw=1',
-  u => CF_W + '/?url=' + encodeURIComponent(u),
-  u => 'https://api.allorigins.win/raw?url=' + encodeURIComponent(u),
-  u => 'https://api.codetabs.com/v1/proxy/?quest=' + encodeURIComponent(u)
+/* ================= 状态 ================= */
+const S = {
+  model:null, running:false, paused:false,
+  epoch:0, totalEpochs:0, loss:[], acc:[],
+  X:null, Y:null, isReg:false, nClass:2,
+  cur:null, tasks:[], seq:1, cfg:null,
+};
+const $=id=>document.getElementById(id);
+const ts=()=>new Date().toTimeString().slice(0,8);
+
+/* ================= 终端 ================= */
+function log(html, cls){
+  ['termBody','termBody2'].forEach(id=>{
+    const d=document.createElement('div');
+    d.className=cls||'t-dim';
+    d.innerHTML=`<span class="t-dim">[${ts()}]</span> ${html}`;
+    $(id).appendChild(d); $(id).scrollTop=$(id).scrollHeight;
+  });
+}
+function logRaw(html){
+  ['termBody','termBody2'].forEach(id=>{
+    const d=document.createElement('div'); d.innerHTML=html;
+    $(id).appendChild(d); $(id).scrollTop=$(id).scrollHeight;
+  });
+}
+
+/* ================= 数据集生成 ================= */
+function genSpiral(n){
+  const X=[],Y=[];
+  for(let i=0;i<n/2;i++){
+    for(let c=0;c<2;c++){
+      const r=i/(n/2)*5, t=1.75*i/(n/2)*2*Math.PI+c*Math.PI;
+      X.push([r*Math.sin(t)+(Math.random()-.5)*.5, r*Math.cos(t)+(Math.random()-.5)*.5]);
+      Y.push(c);
+    }
+  }
+  return {X,Y,isReg:false};
+}
+function genMoons(n){
+  const X=[],Y=[];
+  for(let i=0;i<n/2;i++){
+    const a=Math.PI*i/(n/2);
+    X.push([Math.cos(a)+(Math.random()-.5)*.25, Math.sin(a)+(Math.random()-.5)*.25]); Y.push(0);
+    X.push([1-Math.cos(a)+(Math.random()-.5)*.25, 0.5-Math.sin(a)+(Math.random()-.5)*.25]); Y.push(1);
+  }
+  return {X,Y,isReg:false};
+}
+function genXor(n){
+  const X=[],Y=[];
+  for(let i=0;i<n;i++){
+    const x=Math.random()*2-1, y=Math.random()*2-1;
+    X.push([x,y]); Y.push((x>0)^(y>0)?1:0);
+  }
+  return {X,Y,isReg:false};
+}
+function genSine(n){
+  const X=[],Y=[];
+  for(let i=0;i<n;i++){
+    const x=Math.random()*4-2;
+    X.push([x,0]); Y.push(Math.sin(x*Math.PI)+ (Math.random()-.5)*0.15);
+  }
+  return {X,Y,isReg:true};
+}
+function parseCsv(text){
+  const rows=text.trim().split(/\r?\n/).map(r=>r.split(',').map(Number)).filter(r=>r.length>=2&&!r.some(isNaN));
+  const Y=rows.map(r=>r.pop()), X=rows;
+  const uniq=[...new Set(Y)];
+  const isReg=uniq.length>10;
+  return {X,Y,isReg};
+}
+const DS_META=[
+  ['spiral','螺旋分类','400 样本 / 2 特征 / 2 类','非线性可分'],
+  ['moons','双月分类','400 样本 / 2 特征 / 2 类','经典半月形'],
+  ['xor','XOR 分类','400 样本 / 2 特征 / 2 类','线性不可分'],
+  ['sine','正弦回归','200 样本 / 1 特征','曲线拟合'],
 ];
-const CHUNK = 5*1024*1024;
+function getDataset(){
+  const key=$('cfgData').value;
+  if(key==='spiral') return genSpiral(400);
+  if(key==='moons') return genMoons(400);
+  if(key==='xor') return genXor(400);
+  if(key==='sine') return genSine(200);
+  if(key==='csv'){
+    if(!S.csvText) throw new Error('请先选择 CSV 文件');
+    return parseCsv(S.csvText);
+  }
+}
+$('cfgData').onchange=e=>{
+  $('csvRow').classList.toggle('hidden',e.target.value!=='csv');
+};
+$('btnCsv').onclick=()=>$('csvFile').click();
+$('csvFile').onchange=e=>{
+  const f=e.target.files[0]; if(!f) return;
+  const r=new FileReader();
+  r.onload=()=>{ S.csvText=r.result; $('csvName').textContent=f.name; log(`CSV 已加载：${f.name}（${r.result.trim().split(/\r?\n/).length} 行）`,'t-green'); };
+  r.readAsText(f);
+};
 
-/* ============ 日志 ============ */
-const logBox = document.getElementById('log');
-function log(msg, cls){ const d=document.createElement('div'); d.className='l-'+(cls||'dim'); d.textContent='['+new Date().toLocaleTimeString()+'] '+msg; logBox.appendChild(d); logBox.scrollTop=logBox.scrollHeight; }
+/* ================= 网络结构 ================= */
+const ARCHS=[[4],[8,8],[16,16],[32,32,32],[64,64,64]];
+$('cfgHidden').oninput=e=>{ $('archVal').textContent=ARCHS[e.target.value-1].join(' x '); };
+let curOpt='adam';
+document.querySelectorAll('.opt-btn').forEach(b=>b.onclick=()=>{
+  curOpt=b.dataset.opt;
+  document.querySelectorAll('.opt-btn').forEach(x=>{x.className='btn btn-ghost flex-1 opt-btn !py-1.5'});
+  b.className='btn btn-primary flex-1 opt-btn !py-1.5';
+});
+$('cfgLr').oninput=e=>{ $('lrVal').textContent='1e'+e.target.value; };
+const lrVal=()=>Math.pow(10,Number($('cfgLr').value));
 
-/* ============ 多通道抓取 ============ */
-async function pfetch(url, opt={}){
-  const tries=[];
-  const mk=(label,build)=>async u=>{
-    const h={};
-    if(opt.range) h['Range']=opt.range;
-    if(opt.referer) h['x-referer']=opt.referer;
-    const r=await fetch(build(u),{headers:h});
-    if(!r.ok) throw new Error('HTTP '+r.status);
-    return r;
+function buildModel(nFeat, isReg){
+  const layers=ARCHS[$('cfgHidden').value-1];
+  const m=tf.sequential();
+  layers.forEach((u,i)=>m.add(tf.layers.dense({units:u,activation:'relu',inputShape:i===0?[nFeat]:undefined})));
+  m.add(tf.layers.dense({units:1, activation:isReg?'linear':'sigmoid'}));
+  const opt = curOpt==='sgd' ? tf.train.sgd(lrVal())
+            : curOpt==='adamw' ? (tf.train.adamw?tf.train.adamw(lrVal()):tf.train.adam(lrVal()))
+            : tf.train.adam(lrVal());
+  m.compile({optimizer:opt, loss:isReg?'meanSquaredError':'binaryCrossentropy', metrics:isReg?['mse']:['accuracy']});
+  return m;
+}
+
+/* ================= 图表 ================= */
+const chart=echarts.init($('chart'),null,{renderer:'canvas'});
+function chartOpt(){
+  const reg=S.isReg;
+  return {
+    backgroundColor:'transparent', animation:false,
+    grid:{left:52,right:52,top:36,bottom:32},
+    legend:{textStyle:{color:'#768390'},top:4},
+    tooltip:{trigger:'axis',backgroundColor:'#1c2128',borderColor:'#2d333b',textStyle:{color:'#adbac7',fontSize:12}},
+    xAxis:{type:'category',name:'epoch',data:S.loss.map((_,i)=>i+1),axisLine:{lineStyle:{color:'#2d333b'}},axisLabel:{color:'#768390'}},
+    yAxis:[
+      {type:'value',name:'loss',splitLine:{lineStyle:{color:'#21262d'}},axisLabel:{color:'#768390'}},
+      {type:'value',name:reg?'mse':'acc',max:reg?null:1,splitLine:{show:false},axisLabel:{color:'#768390',formatter:v=>reg?v:(v*100).toFixed(0)+'%'}}
+    ],
+    series:[
+      {name:'Loss',type:'line',smooth:true,showSymbol:false,data:S.loss,lineStyle:{color:'#e5534b',width:2},areaStyle:{color:'rgba(229,83,75,.08)'}},
+      {name:reg?'MSE':'Accuracy',type:'line',smooth:true,showSymbol:false,yAxisIndex:1,data:S.acc,lineStyle:{color:'#539bf5',width:2},areaStyle:{color:'rgba(83,155,245,.08)'}}
+    ]
   };
-  // 通道1: 云函数(raw=1 原始内容) 通道2: 自建CF Worker 通道3+: 公共代理兜底
-  tries.push(mk('TCB', u=>TCB+'?url='+encodeURIComponent(u)+'&raw=1'+(opt.referer?'&referer='+encodeURIComponent(opt.referer):'')));
-  tries.push(mk('CFW', u=>CF_W+'/?url='+encodeURIComponent(u)));
-  for(const p of PROXIES.slice(2)) tries.push(mk('PUB', p));
-  if(!opt.forceProxy) tries.unshift(u=>fetch(u,opt.fetchInit||{}));
-  let lastErr;
-  for(let i=0;i<tries.length;i++){
-    try{ const r=await tries[i](url); log('通道['+(i===0&&!opt.forceProxy?'直连':i)+'] 命中','ok'); return r; }
-    catch(e){ lastErr=e; }
+}
+chart.setOption(chartOpt());
+window.addEventListener('resize',()=>chart.resize());
+$('btnZoomLoss').onclick=()=>chart.dispatchAction({type:'legendSelect',selected:{Loss:true}});
+$('btnZoomAcc').onclick=()=>chart.dispatchAction({type:'legendSelect',selected:{Loss:false}});
+$('btnExport').onclick=()=>{const a=document.createElement('a');a.href=chart.getDataURL({pixelRatio:2});a.download='training-curve.png';a.click();log('训练曲线已导出 PNG','t-green');};
+
+/* ================= 决策边界 / 拟合可视化 ================= */
+const bc=$('boundary'), bctx=bc.getContext('2d');
+function drawViz(){
+  const W=bc.width,H=bc.height;
+  bctx.fillStyle='#0a0d12'; bctx.fillRect(0,0,W,H);
+  if(!S.X) return;
+  const xs=S.X.map(p=>p[0]), ys=S.X.map(p=>p[1]);
+  const x0=Math.min(...xs),x1=Math.max(...xs),y0=Math.min(...ys),y1=Math.max(...ys);
+  const px=(v)=>(v-x0)/(x1-x0+1e-9)*(W-20)+10;
+  const py=(v)=>H-((v-y0)/(y1-y0+1e-9)*(H-20)+10);
+  if(S.isReg){
+    // 散点 + 拟合曲线
+    bctx.fillStyle='rgba(83,155,245,.7)';
+    S.X.forEach((p,i)=>{bctx.beginPath();bctx.arc(px(p[0]),py(S.Y[i]),2.2,0,7);bctx.fill();});
+    if(S.model){
+      const grid=[]; for(let i=0;i<=80;i++) grid.push([x0+(x1-x0)*i/80,0]);
+      const pred=tf.tidy(()=>S.model.predict(tf.tensor2d(grid)).dataSync());
+      bctx.strokeStyle='#57ab5a'; bctx.lineWidth=2; bctx.beginPath();
+      grid.forEach((g,i)=>{const X=px(g[0]),Y=py(pred[i]); i?bctx.lineTo(X,Y):bctx.moveTo(X,Y);});
+      bctx.stroke();
+    }
+    $('vizTitle').textContent='曲线拟合（实时）';
+  } else {
+    // 决策边界
+    if(S.model){
+      const N=60, grid=[];
+      for(let i=0;i<N;i++) for(let j=0;j<N;j++) grid.push([x0+(x1-x0)*i/(N-1), y0+(y1-y0)*j/(N-1)]);
+      const pred=tf.tidy(()=>S.model.predict(tf.tensor2d(grid)).dataSync());
+      const cw=(W-20)/N, ch=(H-20)/N;
+      for(let i=0;i<N;i++) for(let j=0;j<N;j++){
+        const v=pred[i*N+j];
+        bctx.fillStyle=`rgba(${v>0.5?'229,83,75':'83,155,245'},${(Math.abs(v-0.5)*1.6).toFixed(2)})`;
+        bctx.fillRect(px(grid[i*N+j][0])-cw/2, py(grid[i*N+j][1])-ch/2, cw+1, ch+1);
+      }
+    }
+    S.X.forEach((p,i)=>{
+      bctx.fillStyle=S.Y[i]>0.5?'#e5534b':'#539bf5';
+      bctx.beginPath();bctx.arc(px(p[0]),py(p[1]),2.4,0,7);bctx.fill();
+    });
+    $('vizTitle').textContent='决策边界（实时）';
   }
-  throw lastErr||new Error('全部通道失败');
-}
-async function probeSize(url){
-  try{
-    const r=await fetch(TCB+'?url='+encodeURIComponent(url)+'&head=1&raw=1');
-    const j=await r.json();
-    if(j.ok) return {size:+j.contentLength||0, ranges:(j.acceptRanges||'').includes('bytes'), type:j.contentType||''};
-  }catch(e){}
-  try{
-    const r=await fetch(CF_W+'/?url='+encodeURIComponent(url),{method:'HEAD'});
-    return {size:+r.headers.get('content-length')||0, ranges:(r.headers.get('accept-ranges')||'').includes('bytes'), type:r.headers.get('content-type')||''};
-  }catch(e){}
-  return {size:0, ranges:false, type:''};
-}
-async function ptext(url,opt){ const r=await pfetch(url,opt); return await r.text(); }
-async function pbytes(url,opt){ const r=await pfetch(url,opt); return new Uint8Array(await r.arrayBuffer()); }
-
-/* ============ 资源模型 ============ */
-let RES=[], curTab='all';
-const EXTMAP={video:['mp4','m3u8','flv','webm','mkv','mov','avi','ts','mpd','m4s'],audio:['mp3','m4a','aac','wav','ogg','flac','opus','wma'],image:['jpg','jpeg','png','gif','webp','bmp','svg','ico','avif'],doc:['pdf','doc','docx','xls','xlsx','ppt','pptx','txt','md','csv','epub','azw3','mobi','json','xml'],archive:['zip','rar','7z','tar','gz'],script:['js','css']};
-function extOf(u){ try{ const p=new URL(u,location.href).pathname; const m=p.match(/\.([a-z0-9]{1,5})$/i); return m?m[1].toLowerCase():''; }catch(e){ return ''; } }
-function typeOf(u){
-  const e=extOf(u); const s=u.toLowerCase();
-  if(/\.m3u8|\.mpd|format=m3u8|type=m3u8/.test(s)) return 'video';
-  for(const [t,arr] of Object.entries(EXTMAP)) if(arr.includes(e)) return t==='archive'?'doc':t;
-  if(/\.(mp4|m3u8|mpd|flv|webm)[?]|video|playurl|playinfo|mediadata|__playinfo__/.test(s)) return 'video';
-  if(/\.(mp3|m4a|aac|wav|ogg|flac)[?]|audio/.test(s)) return 'audio';
-  if(/\.(jpg|jpeg|png|gif|webp)[?]/.test(s)) return 'image';
-  if(/\.(pdf|docx?|xlsx?|pptx?|epub|azw3|mobi)[?]/.test(s)) return 'doc';
-  return 'other';
-}
-function nameOf(u,t){
-  try{ const p=new URL(u,location.href); let n=decodeURIComponent(p.pathname.split('/').pop()||''); if(n&&n.includes('.')) return n.slice(0,60);}catch(e){}
-  return (t||'res')+'_'+Math.abs(hash(u)).toString(36).slice(0,8)+'.'+(guessExt(u,t)||'bin');
-}
-function guessExt(u,t){ const e=extOf(u); if(e) return e; return {video:'mp4',audio:'mp3',image:'jpg',doc:'bin',other:'bin'}[t]||'bin'; }
-function hash(s){ let h=0; for(let i=0;i<s.length;i++){h=((h<<5)-h+s.charCodeAt(i))|0;} return Math.abs(h); }
-
-function addRes(url,type,from,referer){
-  if(!url||url.startsWith('data:')||url.startsWith('blob:')) return;
-  url=url.trim(); if(url.length<8) return;
-  if(!/^https?:\/\//i.test(url)){
-    try{ url=new URL(url, location.href).href; }catch(e){ return; }
-  }
-  if(RES.some(r=>r.url===url)) return;
-  if(!type) type=typeOf(url);
-  RES.push({url,type,from:from||'',size:null,name:nameOf(url,type),referer:referer||''});
+  $('vizInfo').textContent=S.X.length+' 样本';
 }
 
-/* ============ 渲染 ============ */
-function render(){
-  const list=document.getElementById('list'), stats=document.getElementById('stats');
-  if(!RES.length){ list.innerHTML='<div class="empty">等待任务 — 输入网址回车开始抓取</div>'; stats.innerHTML=''; return; }
-  const counts={}; RES.forEach(r=>counts[r.type]=(counts[r.type]||0)+1);
-  const TABS=[['all','全部'],['video','视频'],['audio','音频'],['image','图片'],['doc','文档'],['other','链接/其他']];
-  stats.innerHTML=TABS.map(([k,n])=>`<div class="stat ${curTab===k?'on':''}" onclick="curTab='${k}';render()"><b>${k==='all'?RES.length:(counts[k]||0)}</b>${n}</div>`).join('');
-  const show=curTab==='all'?RES:RES.filter(r=>r.type===curTab);
-  if(!show.length){ list.innerHTML='<div class="empty">该分类暂无资源</div>'; return; }
-  RES.forEach((r,idx)=>{ if(!r._id) r._id='r'+idx; });
-  const BN={video:'视频',audio:'音频',image:'图片',doc:'文档',other:'链接',script:'脚本'};
-  list.innerHTML=show.map((r,i)=>`
-    <div class="item">
-      <span class="badge b-${r.type}">${BN[r.type]||r.type.toUpperCase()}</span>
-      <span class="iurl"><a href="${esc(r.url)}" target="_blank" rel="noreferrer">${esc(r.url.length>110?r.url.slice(0,110)+'…':r.url)}</a>${r.from?`<br><span style="color:var(--dim);font-size:10px">来源: ${esc(r.from)}</span>`:''}</span>
-      <span class="isize">${r.size?fmtSize(r.size):''}</span>
-      <span class="ibtns">
-        ${['video','audio','image'].includes(r.type)?`<button class="btn sm" onclick="preview('${r._id}')">▶ 预览</button>`:''}
-        ${r.type==='video'&&/\.m3u8/i.test(r.url)?`<button class="btn sm dl" onclick="dlHLS('${r._id}')">⬇ 合并下载</button>`:''}
-        <button class="btn sm dl" onclick="dlOne('${r._id}')">⬇ 下载</button>
-      </span>
-    </div>`).join('');
+/* ================= 训练核心（真实） ================= */
+function cfgSummary(){
+  return {data:$('cfgData').value, arch:ARCHS[$('cfgHidden').value-1].join('x'),
+    epochs:+$('cfgEpochs').value, batch:+$('cfgBatch').value, lr:lrVal(), opt:curOpt};
 }
-function esc(s){ return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
-function fmtSize(n){ if(n>1e9) return (n/1e9).toFixed(2)+' GB'; if(n>1e6) return (n/1e6).toFixed(1)+' MB'; if(n>1e3) return (n/1e3).toFixed(0)+' KB'; return n+' B'; }
-function byId(id){ return RES.find(r=>r._id===id); }
-function clearAll(){ RES=[]; render(); log('已清空','dim'); }
-function quick(u){ document.getElementById('url').value=u; crawl(); }
-
-/* ============ 抓取主流程 ============ */
-let BUSY=false;
-async function crawl(){
-  const inp=document.getElementById('url'); let target=inp.value.trim();
-  if(!target) return log('请输入网址','warn');
-  if(!/^https?:\/\//i.test(target)) target='https://'+target;
-  inp.value=target;
-  if(BUSY) return log('正在处理上一任务','warn');
-  BUSY=true; document.getElementById('go').disabled=true;
-  try{
-    log('开始抓取: '+target,'info');
-    const html=await ptext(target);
-    log('抓取成功 '+fmtSize(html.length),'ok');
-    parseHTML(html, target);
-    await deepScan(target);
-    render();
-    log('解析完成，共 '+RES.length+' 项资源','ok');
-  }catch(e){ log('抓取失败: '+e.message,'err'); }
-  BUSY=false; document.getElementById('go').disabled=false;
+async function startTrain(cmdCfg){
+  if(S.running){ log('已有任务在运行，请先 stop 或等待完成。','t-yellow'); return; }
+  let ds;
+  try{ ds=getDataset(); }catch(e){ log(e.message,'t-red'); return; }
+  if(S.model){ S.model.dispose(); S.model=null; }
+  disposeData();
+  S.isReg=ds.isReg;
+  const X=tf.tensor2d(ds.X), Y=tf.tensor2d(ds.Y.map(v=>[v]));
+  S.X=ds.X; S.Y=ds.Y;
+  S.dataT={X,Y};
+  S.cfg=cmdCfg||cfgSummary();
+  const ep=Math.max(1,Math.min(2000,S.cfg.epochs));
+  S.totalEpochs=ep; S.epoch=0; S.loss=[]; S.acc=[];
+  S.model=buildModel(ds.X[0].length, ds.isReg);
+  const nParams=S.model.countParams();
+  S.running=true; S.paused=false;
+  S.cur={id:'run-'+String(S.seq++).padStart(3,'0'), data:$('cfgData').selectedOptions[0].textContent,
+    arch:S.cfg.arch, prog:0, metric:'--', st:'run'};
+  S.tasks.unshift(S.cur);
+  $('chartTaskName').textContent=`· ${S.cur.id} (${ds.isReg?'回归':'分类'}, ${nParams} 参数)`;
+  $('btnStart').disabled=true; $('btnPause').disabled=false; $('btnStop').disabled=false;
+  $('stAccName').textContent=ds.isReg?'MSE':'训练集准确率';
+  log(`任务 <span class="t-purple">${S.cur.id}</span> 启动：${ds.isReg?'回归':'二分类'} | 样本 ${ds.X.length} | 结构 ${ds.X[0].length}→${S.cfg.arch}→1 | ${nParams} 参数`,'t-green');
+  log(`优化器 ${S.cfg.opt} | lr=${S.cfg.lr} | batch=${S.cfg.batch} | epochs=${ep} | 后端 ${tf.getBackend()}`,'t-dim');
+  renderTasks(); chart.setOption(chartOpt()); drawViz();
+  let t0=performance.now(), done0=S.epoch;
+  const speedTimer=setInterval(()=>{
+    const dt=(performance.now()-t0)/1000, de=S.epoch-done0;
+    $('stSpeed').textContent=(de/dt).toFixed(1);
+    t0=performance.now(); done0=S.epoch;
+  },1000);
+  S.speedTimer=speedTimer;
+  await fitLoop();
 }
-
-function parseHTML(html, base){
-  const doc=new DOMParser().parseFromString(html,'text/html'); let n=0;
-  doc.querySelectorAll('[src]').forEach(el=>{ addRes(el.getAttribute('src'),null,'标签'+el.tagName.toLowerCase()); n++; });
-  doc.querySelectorAll('[href]').forEach(el=>{ const h=el.getAttribute('href'); if(h&&!h.startsWith('#')&&!h.startsWith('javascript:')){ addRes(h,null,'<a/link>'); n++; } });
-  doc.querySelectorAll('source').forEach(el=>addRes(el.getAttribute('src'),null,'<source>'));
-  doc.querySelectorAll('video,audio').forEach(el=>{
-    (el.getAttribute('src')&&addRes(el.getAttribute('src'),null,'<video/audio>'));
-    const p=el.getAttribute('poster'); if(p) addRes(p,'image','poster');
+async function fitLoop(){
+  const remaining=S.totalEpochs-S.epoch;
+  if(remaining<=0) return finishTrain();
+  await S.model.fit(S.dataT.X, S.dataT.Y, {
+    epochs:S.totalEpochs, initialEpoch:S.epoch,
+    batchSize:S.cfg.batch, shuffle:true, validationSplit:0.15,
+    callbacks:{
+      onEpochEnd: async (ep, logs)=>{
+        S.epoch=ep+1;
+        const l=logs.loss, m=S.isReg?logs.mse:logs.acc;
+        S.loss.push(+l.toFixed(5)); S.acc.push(+m.toFixed(5));
+        S.cur.prog=Math.round(S.epoch/S.totalEpochs*100);
+        S.cur.metric=S.isReg?`loss ${l.toFixed(4)}`:`loss ${l.toFixed(4)} / acc ${(m*100).toFixed(1)}%`;
+        $('stEpoch').textContent=`epoch ${S.epoch} / ${S.totalEpochs}`;
+        $('stLoss').textContent=l.toFixed(4);
+        $('stAcc').textContent=S.isReg?m.toFixed(4):(m*100).toFixed(1)+'%';
+        chart.setOption(chartOpt());
+        if(S.epoch%2===0||S.epoch===S.totalEpochs) drawViz();
+        if(S.epoch%10===0||S.epoch===1) log(`epoch ${S.epoch}/${S.totalEpochs} - loss: <span class="t-red">${l.toFixed(5)}</span> - ${S.isReg?'mse':'acc'}: <span class="t-blue">${S.isReg?m.toFixed(5):(m*100).toFixed(2)+'%'}</span> - val_loss: ${logs.val_loss?logs.val_loss.toFixed(5):'--'}`);
+        renderTasks();
+        if(S.paused||!S.running) S.model.stopTraining=true;
+        await tf.nextFrame();
+      }
+    }
   });
-  // data-src 懒加载
-  doc.querySelectorAll('[data-src],[data-original],[data-url]').forEach(el=>{
-    const v=el.getAttribute('data-src')||el.getAttribute('data-original')||el.getAttribute('data-url');
-    if(v) addRes(v,null,'懒加载');
-  });
-  // 内联 script 中的 JSON / 直链深扫
-  doc.querySelectorAll('script').forEach(s=>{
-    const t=s.textContent||''; if(t.length<10) return;
-    scanText(t, 'inline-script');
-  });
-  // 全文正则兜底（HTML 内嵌 JSON 常见于 ssr 页面）
-  scanText(html, 'page-text');
-  log('HTML 解析: 提取 '+n+' 个标签资源','dim');
+  if(S.running && !S.paused && S.epoch>=S.totalEpochs) finishTrain();
 }
+function cleanupRun(){
+  clearInterval(S.speedTimer); S.running=false; S.paused=false;
+  $('btnStart').disabled=false; $('btnPause').disabled=true; $('btnStop').disabled=true;
+  $('btnPause').innerHTML='&#10073;&#10073; 暂停';
+  $('stStatus').textContent='空闲'; $('stStatus').style.color='var(--text-dim)';
+  $('stSpeed').textContent='--';
+}
+function finishTrain(){
+  S.cur.prog=100; S.cur.st='done';
+  cleanupRun(); $('btnExportModel').disabled=false;
+  const best=S.isReg?Math.min(...S.loss).toFixed(5):Math.max(...S.acc)*100;
+  log(`任务 ${S.cur.id} 训练完成！${S.isReg?'最低 loss':'最佳 acc'}: <span class="t-green">${best}${S.isReg?'':'%'}</span>，可点击「导出模型」下载权重。`,'t-green');
+  drawViz(); renderTasks();
+}
+function pauseTrain(p){
+  if(!S.running) return;
+  S.paused=p; S.cur.st=p?'pause':'run';
+  $('btnPause').innerHTML=p?'&#9654; 继续':'&#10073;&#10073; 暂停';
+  $('stStatus').textContent=p?'已暂停':'训练中';
+  $('stStatus').style.color=p?'var(--yellow)':'var(--green)';
+  log(p?`任务已暂停于 epoch ${S.epoch}（权重保留，可随时继续）`:'任务恢复，继续训练...','t-yellow');
+  renderTasks();
+  if(!p) fitLoop();
+}
+function stopTrain(src){
+  if(!S.running) return;
+  S.cur.st='stop';
+  cleanupRun();
+  $('btnExportModel').disabled=false;
+  log(`任务 ${S.cur.id} 已停止（${src}），当前权重保留，可导出。`,'t-red');
+  renderTasks();
+}
+function disposeData(){ if(S.dataT){ S.dataT.X.dispose(); S.dataT.Y.dispose(); S.dataT=null; } }
+$('btnStart').onclick=()=>startTrain();
+$('btnPause').onclick=()=>pauseTrain(!S.paused);
+$('btnStop').onclick=()=>stopTrain('手动停止');
+$('btnExportModel').onclick=async ()=>{
+  if(!S.model) return;
+  await S.model.save('downloads://neuralab-model');
+  log('模型已导出（model.json + weights.bin 下载到本地）','t-green');
+};
 
-/* 深扫：找 __playinfo__ / player JSON / 媒体直链 */
-function scanText(text, from){
-  try{
-    // 1) window.__playinfo__ = {...} 等大 JSON
-    const jsonRe=/(?:window\.)?(__playinfo__|__INITIAL_STATE__|__NEXT_DATA__|player_data|__pinia|videoData|playUrl)\s*=\s*(\{[\s\S]{0,200000}?\});/g;
-    let m;
-    while((m=jsonRe.exec(text))!==null){
-      try{
-        const obj=JSON.parse(m[2]);
-        walkJSON(obj, from+':'+m[1]);
-      }catch(e){
-        // JSON 不完整则退回正则扫描该片段
-        scanLinks(m[2], from+':'+m[1]+'(partial)');
-      }
-    }
-    // 2) 全文本直链正则
-    scanLinks(text, from);
-  }catch(e){ log('深扫异常 '+e.message,'warn'); }
+/* ================= 任务表 / 内存监控 ================= */
+const ST_BADGE={run:'<span class="badge b-run">训练中</span>',pause:'<span class="badge b-pause">已暂停</span>',done:'<span class="badge b-done">已完成</span>',stop:'<span class="badge b-stop">已停止</span>',fail:'<span class="badge b-fail">失败</span>'};
+function renderTasks(){
+  $('taskTable').innerHTML=S.tasks.map(t=>`<tr>
+    <td class="mono text-[#539bf5]">${t.id}</td><td>${t.data}</td><td class="mono text-xs">${t.arch}</td>
+    <td style="min-width:120px"><div class="progress"><div style="width:${t.prog}%"></div></div><span class="text-[11px] text-[#768390] mono">${t.prog}%</span></td>
+    <td class="mono text-xs">${t.metric}</td><td>${ST_BADGE[t.st]}</td>
+  </tr>`).join('');
+  $('taskEmpty').classList.toggle('hidden',S.tasks.length>0);
+  $('taskCount').textContent=S.tasks.length;
+  $('stStatus').textContent=S.running?(S.paused?'已暂停':'训练中'):'空闲';
+  $('stStatus').style.color=S.running?(S.paused?'var(--yellow)':'var(--green)'):'var(--text-dim)';
 }
-function scanLinks(text, from){
-  const re=/https?:\/\/[^\s"'<>\\]+?\.(m3u8|mpd|mp4|flv|webm|mkv|mov|ts|m4s|mp3|m4a|aac|wav|ogg|flac|pdf|docx?|xlsx?|pptx?|epub|zip|rar|7z)(\?[^\s"'<>\\]*)?/gi;
-  let m, c=0;
-  while((m=re.exec(text))!==null){ addRes(m[0],null,from); c++; }
-  if(c) log('正则命中 '+c+' 条直链 ('+from+')','dim');
-}
-function walkJSON(obj, from, depth){
-  if(depth>12||obj===null) return;
-  if(Array.isArray(obj)){ obj.forEach(v=>walkJSON(v,from,(depth||0)+1)); return; }
-  if(typeof obj==='object'){
-    for(const [k,v] of Object.entries(obj)){
-      if(typeof v==='string'){
-        if(/^https?:\/\//.test(v) && /\.(m3u8|mpd|mp4|flv|webm|mp3|m4a|aac|ts|m4s)/i.test(v)){
-          addRes(v,null,from+'.'+k);
-        }
-      } else walkJSON(v,from+'.'+k,(depth||0)+1);
+setInterval(()=>{
+  const mem=tf.memory();
+  $('tensorCnt').textContent=mem.numTensors;
+  const mb=(mem.numBytes/1048576).toFixed(1);
+  $('memTxt').textContent=mb+' MB';
+  $('memBar').style.width=Math.min(100,mem.numBytes/1048576/4)+'%';
+},1500);
+
+/* ================= 命令行 ================= */
+const CMDS={
+  help(){ logRaw(`<span class="t-cyan">可用命令：</span>
+    <br>&nbsp;&nbsp;<span class="t-yellow">train [--epochs N] [--lr X] [--batch N]</span>  启动真实训练
+    <br>&nbsp;&nbsp;<span class="t-yellow">pause / resume / stop</span>  控制当前任务
+    <br>&nbsp;&nbsp;<span class="t-yellow">status</span>  查看后端与训练状态
+    <br>&nbsp;&nbsp;<span class="t-yellow">summary</span>  打印网络结构
+    <br>&nbsp;&nbsp;<span class="t-yellow">eval</span>  在全部数据上评估模型
+    <br>&nbsp;&nbsp;<span class="t-yellow">export</span>  导出模型权重
+    <br>&nbsp;&nbsp;<span class="t-yellow">ls tasks / ls datasets</span>  列出资源
+    <br>&nbsp;&nbsp;<span class="t-yellow">clear</span>  清空终端`);},
+  clear(){ $('termBody').innerHTML=''; $('termBody2').innerHTML=''; },
+  status(){
+    log(`TF.js ${tf.version.tfjs} | 后端 ${tf.getBackend()} | 张量 ${tf.memory().numTensors} 个 (${(tf.memory().numBytes/1048576).toFixed(1)} MB)`,'t-blue');
+    if(S.running) log(`训练中：epoch ${S.epoch}/${S.totalEpochs}${S.paused?'（已暂停）':''} | loss ${S.loss.slice(-1)[0]??'--'}`,'t-purple');
+    else log('当前空闲。','t-dim');
+  },
+  stop(){ stopTrain('命令行 stop'); },
+  pause(){ pauseTrain(true); },
+  resume(){ pauseTrain(false); },
+  export(){ $('btnExportModel').click(); },
+  summary(){ if(S.model){ const lines=[]; S.model.layers.forEach((l,i)=>lines.push(`${i}: ${l.name}  out=[${l.outputShape.slice(1)}]  params=${l.countParams()}`)); lines.forEach(s=>log(s,'t-blue')); log(`总参数: ${S.model.countParams()}`,'t-green'); } else log('尚无模型，先 train。','t-yellow'); },
+  async eval(){
+    if(!S.model||!S.dataT){ log('尚无模型，先 train。','t-yellow'); return; }
+    const r=await S.model.evaluate(S.dataT.X,S.dataT.Y);
+    const vals=Array.isArray(r)?r:[r];
+    log(`评估结果: loss=${vals[0].dataSync()[0].toFixed(5)}${vals[1]?' , metric='+vals[1].dataSync()[0].toFixed(5):''}`,'t-green');
+    vals.forEach(v=>v.dispose());
+  },
+};
+function runCmd(raw){
+  const line=raw.trim(); if(!line) return;
+  logRaw(`<span class="t-green">admin@neuralab</span><span class="t-dim">:~$</span> <span style="color:#cdd9e5">${line.replace(/</g,'&lt;')}</span>`);
+  const parts=line.split(/\s+/), cmd=parts[0].toLowerCase();
+  if(cmd==='train'){
+    const c=cfgSummary();
+    for(let i=1;i<parts.length-1;i+=2){
+      if(parts[i]==='--epochs') c.epochs=+parts[i+1];
+      if(parts[i]==='--lr') c.lr=+parts[i+1];
+      if(parts[i]==='--batch') c.batch=+parts[i+1];
     }
+    $('cfgEpochs').value=c.epochs;
+    startTrain(c); return;
   }
-}
-
-/* ============ 深度模式：正文/文档提取 ============ */
-async function extractDoc(){
-  const inp=document.getElementById('url'); let target=inp.value.trim();
-  if(!target) return log('请输入网址','warn');
-  if(!/^https?:\/\//i.test(target)) target='https://'+target;
-  log('正文提取模式 (r.jina.ai): '+target,'info');
-  try{
-    const r=await fetch('https://r.jina.ai/'+target);
-    if(!r.ok) throw new Error('HTTP '+r.status);
-    const txt=await r.text();
-    openModal('📄 正文提取 · '+target, txt, nameOf(target,'doc').replace(/\.\w+$/,'')+'_正文.txt');
-    log('正文提取成功 '+fmtSize(txt.length),'ok');
-  }catch(e){ log('正文提取失败: '+e.message,'err'); }
-}
-
-/* ============ 下载引擎 ============ */
-function saveBlob(blob, filename){
-  const a=document.createElement('a');
-  a.href=URL.createObjectURL(blob); a.download=filename;
-  document.body.appendChild(a); a.click();
-  setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},4000);
-  log('已保存: '+filename+' ('+fmtSize(blob.size)+')','ok');
-}
-function progShow(txt){ const p=document.getElementById('prog'); p.classList.add('show'); document.getElementById('progTxt').textContent=txt; }
-function progSet(p,txt){ document.getElementById('progFill').style.width=Math.min(100,p*100)+'%'; if(txt)document.getElementById('progTxt').textContent=txt; }
-function progHide(){ document.getElementById('prog').classList.remove('show'); }
-
-async function dlOne(id){
-  const r=byId(id); if(!r) return;
-  const url=r.url;
-  try{
-    if(/\.m3u8/i.test(url)) return dlHLS(id);
-    log('下载: '+url,'info');
-    progShow('探测文件信息…');
-    // 探测文件信息（云函数 head 模式 / Worker HEAD）
-    const info=await probeSize(url);
-    const size=info.size, acceptsRange=info.ranges;
-    r.size=size; render();
-    if(size && size<=CHUNK || !acceptsRange){
-      progSet(0.05,'单次下载 '+fmtSize(size||0));
-      const rr=await pfetch(url,{});
-      const blob=await rr.blob();
-      progSet(1,'完成');
-      saveBlob(blob, r.name);
-    } else {
-      await chunkedDL(url, r);
-    }
-  }catch(e){ log('下载失败: '+e.message,'err'); }
-  progHide();
-}
-
-async function chunkedDL(url, res, prefix){
-  const parts=[];
-  progSet(0,'分块下载 0/'+Math.ceil((res.size||0)/CHUNK));
-  for(let off=0; off<res.size; off+=CHUNK){
-    const end=Math.min(off+CHUNK, res.size)-1;
-    const rr=await pfetch(url,{forceProxy:true, range:'bytes='+off+'-'+end, referer:res.referer||''});
-    parts.push(await rr.arrayBuffer());
-    progSet((off+CHUNK)/res.size,'分块下载 '+Math.round((off+CHUNK)/CHUNK)+'/'+Math.ceil(res.size/CHUNK)+' · '+fmtSize(Math.min(off+CHUNK,res.size))+'/'+fmtSize(res.size));
+  if(cmd==='ls'){
+    const w=(parts[1]||'').toLowerCase();
+    if(w==='tasks') S.tasks.forEach(t=>log(`${t.id}  ${t.data}  ${t.metric}  ${t.st}`,'t-blue'));
+    else if(w==='datasets') DS_META.forEach(d=>log(`${d[0]}  ${d[1]}  ${d[2]}`,'t-blue'));
+    else log('用法: ls tasks|datasets','t-yellow');
+    return;
   }
-  saveBlob(new Blob(parts,{type:'application/octet-stream'}), (prefix||'')+res.name);
+  (CMDS[cmd]||(()=>log(`未知命令: ${cmd}，输入 help 查看帮助`,'t-red')))();
 }
+[['termInput'],['termInput2']].forEach(([id])=>{
+  $(id).addEventListener('keydown',e=>{ if(e.key==='Enter'){ runCmd(e.target.value); e.target.value=''; }});
+});
 
-/* ============ HLS m3u8 合并下载 ============ */
-async function dlHLS(id){
-  const r=byId(id); if(!r) return;
+/* ================= 数据集视图 ================= */
+$('datasetGrid').innerHTML=DS_META.map(d=>`<div class="panel stat-card hover:border-[#444c56] transition cursor-pointer" onclick="document.getElementById('cfgData').value='${d[0]}';document.querySelector('[data-view=dashboard]').click()">
+  <div class="text-sm font-semibold text-[#cdd9e5]">${d[1]}</div>
+  <div class="text-xs text-[#768390] mt-1">${d[2]}</div>
+  <div class="flex justify-between mt-3 text-xs"><span class="badge b-done">${d[3]}</span><span class="mono text-[#768390]">${d[0]}</span></div>
+</div>`).join('');
+
+/* ================= 视图切换 ================= */
+document.querySelectorAll('.nav-item').forEach(n=>n.onclick=()=>{
+  document.querySelectorAll('.nav-item').forEach(x=>x.classList.remove('active'));
+  n.classList.add('active');
+  ['dashboard','tasks','datasets','terminal'].forEach(v=>$('view-'+v).classList.toggle('hidden',v!==n.dataset.view));
+  if(n.dataset.view==='dashboard'){ setTimeout(()=>{chart.resize();drawViz();},50); }
+});
+$('btnRefreshTasks').onclick=()=>{renderTasks();log('任务列表已刷新','t-dim')};
+
+/* ================= 启动 ================= */
+(async()=>{
   try{
-    log('HLS 解析: '+r.url,'info');
-    progShow('解析 m3u8…');
-    let text=await ptext(r.url);
-    // 多级索引：找最高码率子 playlist
-    let lvl=0;
-    while(/#EXT-X-STREAM-INF/i.test(text) && lvl<3){
-      const lines=text.split(/\r?\n/);
-      let best=null,bestBw=0;
-      for(let i=0;i<lines.length;i++){
-        if(lines[i].startsWith('#EXT-X-STREAM-INF')){
-          const bw=+((lines[i].match(/BANDWIDTH=(\d+)/)||[])[1]||0);
-          const uri=lines[i+1]; if(uri&&!uri.startsWith('#')&&bw>=bestBw){bestBw=bw;best=uri.trim();}
-        }
-      }
-      if(!best) break;
-      const sub=new URL(best, r.url).href;
-      log('多级索引 → '+sub,'dim');
-      text=await ptext(sub); lvl++;
-    }
-    // 解析 key + segments
-    let encKey=null, ivHex=null, seq=0;
-    const segs=[];
-    for(const line of text.split(/\r?\n/)){
-      if(line.startsWith('#EXT-X-MEDIA-SEQUENCE')) seq=+line.split(':')[1]||0;
-      if(line.startsWith('#EXT-X-KEY')){
-        const method=(line.match(/METHOD=([^,]+)/)||[])[1];
-        if(method&&method!=='NONE'){
-          const ku=(line.match(/URI="([^"]+)"/)||[])[1];
-          ivHex=(line.match(/IV=0[xX]([0-9a-fA-F]+)/)||[])[1];
-          if(ku){ const kurl=new URL(ku, r.url).href; encKey=await pbytes(kurl); log('AES-128 密钥已获取','ok'); }
-        }
-      }
-      if(line&&!line.startsWith('#')) segs.push(new URL(line, r.url).href);
-    }
-    if(!segs.length) throw new Error('未找到媒体分段');
-    log('共 '+segs.length+' 段'+(encKey?' (AES-128 加密)':''),'dim');
-    progSet(0,'下载分段 0/'+segs.length);
-    const key=encKey?await crypto.subtle.importKey('raw',encKey,'AES-CBC',false,['decrypt']):null;
-    const chunks=[]; let done=0; const total=segs.length;
-    const CONC=4; let idx=0;
-    async function worker(){
-      while(idx<total){
-        const my=idx++;
-        let data=await pbytes(segs[my]);
-        if(key){
-          let iv;
-          if(ivHex){ iv=new Uint8Array(ivHex.match(/.{2}/g).map(h=>parseInt(h,16))); }
-          else{ iv=new Uint8Array(16); const dv=new DataView(iv.buffer); dv.setUint32(8, seq+my); }
-          data=new Uint8Array(await crypto.subtle.decrypt({name:'AES-CBC',iv}, key, data));
-        }
-        chunks[my]=data; done++;
-        if(done%5===0||done===total) progSet(done/total,'下载分段 '+done+'/'+total+' · '+fmtSize(chunks.reduce((s,c)=>s+(c?c.length:0),0)));
-      }
-    }
-    await Promise.all(Array.from({length:CONC},worker));
-    const blob=new Blob(chunks,{type:'video/mp2t'});
-    saveBlob(blob, r.name.replace(/\.\w+$/,'')+'.ts');
-  }catch(e){ log('HLS 失败: '+e.message,'err'); }
-  progHide();
-}
-
-/* ============ 预览 ============ */
-async function preview(id){
-  const r=byId(id); if(!r) return;
-  openModal((r.type==='video'?'▶ 视频预览 · ':'🎵 音频预览 · ')+r.name,
-    '<video controls autoplay style="width:100%;max-height:60vh" src="'+esc(r.url)+'"></video>', null);
-  document.getElementById('mSave').style.display='none';
-}
-function openModal(title, body, saveName){
-  document.getElementById('mTitle').textContent=title;
-  document.getElementById('mBody').innerHTML=body;
-  const sb=document.getElementById('mSave');
-  if(saveName){ sb.style.display=''; sb.dataset.name=saveName; sb.dataset.body=body; }
-  else sb.style.display='none';
-  document.getElementById('modal').classList.add('show');
-}
-function saveModal(){ const sb=document.getElementById('mSave'); saveBlob(new Blob([sb.dataset.body],{type:'text/plain'}), sb.dataset.name); }
-function closeModal(){ document.getElementById('modal').classList.remove('show'); }
-
-/* ============ B站专用：书签提取 + 直链下载 ============ */
-const BILI_BOOKMARKLET = "javascript:(function(){var pi=window.__playinfo__;if(!pi||!pi.data||!pi.data.dash){alert('未找到播放数据，请先播放视频再点');return;}var d=pi.data.dash;var v=(d.video||[]).slice().sort(function(a,b){return(b.bandwidth||0)-(a.bandwidth||0)})[0];var a=(d.audio||[]).slice().sort(function(a,b){return(b.bandwidth||0)-(a.bandwidth||0)})[0];var out=v.baseUrl+(a?'##ref='+encodeURIComponent(location.href)+'##audio='+encodeURIComponent(a.baseUrl):'##ref='+encodeURIComponent(location.href));var w=window.open('https://allen-00102.github.io/chernobyl-simulator/?direct='+encodeURIComponent(out),'_blank');if(!w){prompt('弹窗被拦截，请手动复制：',out);}})()";
-function biliHelper(){
-  openModal('📌 B站视频下载 · 三步搞定（绕过风控）',
-    '<div style="font-size:13px;line-height:2">'+
-    '<b style="color:var(--warn)">第一步</b>：复制下面整段代码 → 浏览器书签栏右键 →「添加网页/新书签」→ 名称随意（如「B站提取」），网址栏粘贴这段代码<br>'+
-    '<b style="color:var(--warn)">第二步</b>：打开任意 B站视频播放页（等视频开始播放）→ 点书签栏里的「B站提取」<br>'+
-    '<b style="color:var(--warn)">第三步</b>：会自动跳回本页并列出视频/音频直链 → 分别点 ⬇ 下载<br>'+
-    '<span style="color:var(--dim)">合并：下载的 video.m4s + audio.m4s 可用 ffmpeg 合并：<br>ffmpeg -i video.m4s -i audio.m4s -c copy output.mp4</span>'+
-    '</div><textarea id="bkCode" style="width:100%;height:90px;margin-top:10px;background:#05080c;color:var(--acc);border:1px solid var(--line2);border-radius:4px;padding:8px;font-family:var(--mono);font-size:11px" readonly>'+esc(BILI_BOOKMARKLET)+'</textarea>', null);
-  document.getElementById('mSave').style.display='none';
-}
-function dlDirect(rawStr){
-  rawStr=rawStr.trim();
-  let ref='';
-  const m=rawStr.match(/^(.+?)##ref=([^#]+)(?:##audio=(.+))?$/);
-  if(m){ rawStr=m[1]; ref=decodeURIComponent(m[2]);
-    if(m[3]) addRes(decodeURIComponent(m[3]),'audio','B站书签',ref);
-  }
-  addRes(rawStr,'video','B站书签',ref);
-  render();
-  const vr=RES[RES.length-1];
-  log('识别为直链，开始下载（Referer: '+(ref||'无')+'）','info');
-  dlOne(vr._id);
-}
-/* URL 参数自动处理：?direct=<enc直链[##ref=...]> */
-(function(){
-  const q=new URLSearchParams(location.search);
-  const d=q.get('direct');
-  if(d){
-    history.replaceState(null,'',location.pathname);
-    setTimeout(()=>{ dlDirect(d); },600);
-  }
+    await tf.setBackend('webgl'); await tf.ready();
+  }catch(e){ await tf.setBackend('cpu'); await tf.ready(); }
+  $('backendTxt').textContent=`TF.js ${tf.version.tfjs} · ${tf.getBackend().toUpperCase()} 加速`;
+  log(`NeuraLab 真实训练环境就绪：TensorFlow.js ${tf.version.tfjs}，后端 <span class="t-cyan">${tf.getBackend()}</span>`,'t-green');
+  log('选择数据集后点击「开始训练」，或在终端输入 train。输入 help 查看命令。','t-dim');
 })();
-
-/* ============ 事件 ============ */
-document.getElementById('url').addEventListener('keydown',e=>{ if(e.key==='Enter'){
-  const v=document.getElementById('url').value.trim();
-  if(/##ref=/.test(v)) return dlDirect(v);
-  crawl();
-}});
-log('SUPER CRAWLER X 就绪 · 云函数通道: '+ (TCB.includes('tcloudbase')?'已配置':'未配置') ,'ok');
+renderTasks();
 </script>
 </body>
 </html>
